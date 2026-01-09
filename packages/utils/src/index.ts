@@ -64,6 +64,35 @@ export class LocalMusicScanner {
     return results;
   }
 
+  async countFiles(dir: string): Promise<number> {
+    let count = 0;
+    if (!fs.existsSync(dir)) return 0;
+
+    const traverseCount = (currentDir: string) => {
+      try {
+        const files = fs.readdirSync(currentDir);
+        for (const file of files) {
+          const fullPath = path.join(currentDir, file);
+          try {
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+              traverseCount(fullPath);
+            } else if (/\.(mp3|flac|ogg|wav|m4a)$/i.test(file)) {
+              count++;
+            }
+          } catch (e) {
+            console.warn(`Skipping file ${fullPath}: ${e}`);
+          }
+        }
+      } catch (e) {
+        console.warn(`Failed to read dir ${currentDir}: ${e}`);
+      }
+    };
+
+    traverseCount(dir);
+    return count;
+  }
+
   private async traverse(dir: string, callback: (path: string) => Promise<void>) {
     try {
       const files = fs.readdirSync(dir);

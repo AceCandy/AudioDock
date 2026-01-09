@@ -106,7 +106,11 @@ export class ImportService {
       }
 
       const scanner = new LocalMusicScanner(cachePath);
-      // ... (rest of scanner initialization)
+      // Quickly count total files for progress display
+      const musicCount = await scanner.countFiles(musicPath);
+      const audiobookCount = await scanner.countFiles(audiobookPath);
+      task.total = musicCount + audiobookCount;
+      task.current = 0;
 
       task.status = TaskStatus.PARSING;
 
@@ -114,9 +118,6 @@ export class ImportService {
       const musicResults = await scanner.scanMusic(musicPath);
       // Scan Audiobooks
       const audiobookResults = await scanner.scanAudiobook(audiobookPath);
-
-      task.total = musicResults.length + audiobookResults.length;
-      task.current = 0;
 
       // Cache for folder IDs to reduce DB queries
       const folderCache = new Map<string, number>();

@@ -22,9 +22,10 @@ import {
   getImportTask,
   searchAll,
   TaskStatus,
+  type ImportTask,
   type SearchResults as SearchResultsType,
 } from "@soundx/services";
-import { Flex, Input, Modal, Popover, theme, Tooltip } from "antd";
+import { Flex, Input, Modal, Popover, Progress, theme, Tooltip } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useMessage } from "../../context/MessageContext";
@@ -57,6 +58,10 @@ const Header: React.FC = () => {
   // Mode state: 'music' | 'audiobook'
   const { mode: playMode, setMode: setPlayMode } = usePlayMode();
   const { logout, user } = useAuthStore();
+
+  // Import task state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importTask, setImportTask] = useState<ImportTask | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -105,14 +110,15 @@ const Header: React.FC = () => {
       const res = await createImportTask({ mode });
       if (res.code === 200 && res.data) {
         const taskId = res.data.id;
-        message.success("任务创建成功，开始更新...");
+        setIsImportModalOpen(true);
+        setImportTask({ id: taskId, status: TaskStatus.INITIALIZING });
 
         // Clear previous timer if any
         if (pollTimerRef.current) clearInterval(pollTimerRef.current);
 
         pollTimerRef.current = setInterval(() => {
           pollTaskStatus(taskId);
-        }, 2000);
+        }, 1000);
       } else {
         message.error(res.message || "任务创建失败");
       }
@@ -126,18 +132,15 @@ const Header: React.FC = () => {
     try {
       const res = await getImportTask(taskId);
       if (res.code === 200 && res.data) {
-        const { status, message: taskMsg, total } = res.data;
+        setImportTask(res.data);
+        const { status, total } = res.data;
         if (status === TaskStatus.SUCCESS) {
           message.success(`导入成功！共导入 ${total} 首歌曲`);
-          // Don't reset fields to keep the saved paths
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          // Auto close modal after a short delay
+          setTimeout(() => setIsImportModalOpen(false), 2000);
         } else if (status === TaskStatus.FAILED) {
-          message.error(`导入失败: ${taskMsg}`);
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-        } else {
-          // Continue polling
-          // Optional: Update loading message with progress
-          // message.loading(`正在导入... ${current}/${total}`, 1);
         }
       }
     } catch (error) {
@@ -408,6 +411,42 @@ const Header: React.FC = () => {
         </Popover>
       </div>
       {contextHolder}
+      <Modal
+        title="数据入库进度"
+        open={isImportModalOpen}
+        onCancel={() => {
+            if (importTask?.status === TaskStatus.SUCCESS || importTask?.status === TaskStatus.FAILED) {
+                setIsImportModalOpen(false);
+            } else {
+                message.info("任务正在后台运行...");
+                setIsImportModalOpen(false);
+            }
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        <div style={{ padding: '20px 0' }}>
+            <div style={{ marginBottom: 16 }}>
+                状态：{importTask?.status === TaskStatus.INITIALIZING ? '正在初始化...' : 
+                      importTask?.status === TaskStatus.PARSING ? '正在解析媒体文件...' :
+                      importTask?.status === TaskStatus.SUCCESS ? '入库完成' :
+                      importTask?.status === TaskStatus.FAILED ? '入库失败' : '准备中'}
+            </div>
+            {importTask?.status === TaskStatus.FAILED && (
+                <div style={{ color: token.colorError, marginBottom: 16 }}>
+                    错误：{importTask.message}
+                </div>
+            )}
+            <Progress 
+                percent={importTask?.total ? Math.round((importTask.current || 0) / importTask.total * 100) : 0} 
+                status={importTask?.status === TaskStatus.FAILED ? 'exception' : 
+                        importTask?.status === TaskStatus.SUCCESS ? 'success' : 'active'}
+            />
+            <div style={{ marginTop: 8, textAlign: 'right', color: token.colorTextSecondary }}>
+                共检测到 {importTask?.total || 0} 个音频文件，已经入库 {importTask?.current || 0} 个
+            </div>
+        </div>
+      </Modal>
     </div>
   );
 };
