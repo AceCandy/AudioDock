@@ -98,6 +98,7 @@ services:
       - MUSIC_BASE_DIR=/music
       - CACHE_DIR=/covers
       - DATABASE_URL=file:/data/dev.db
+      - JWT_SECRET=/.jwt_secret # JWT 密钥
 
     # 挂载数据文件和缓存，使用 Docker 命名卷更安全
     volumes:
@@ -105,6 +106,7 @@ services:
       - /volume1/music:/music
       - ./covers:/covers
       - api-db:/data
+      - ./.jwt_secret:/.jwt_secret
 
     restart: unless-stopped
     networks:
@@ -176,6 +178,7 @@ environment:
   - MUSIC_BASE_DIR=/music
   - CACHE_DIR=/covers
   - DATABASE_URL=file:/data/dev.db
+  - JWT_SECRET=/.jwt_secret # JWT 密钥
 
 # 挂载数据文件和缓存，使用 Docker 命名卷更安全
 volumes:
@@ -183,6 +186,7 @@ volumes:
   - ./music:/music
   - ./covers:/covers
   - api-db:/data
+  - ./jwt_secret:/.jwt_secret
 ```
 
 根目录下运行构建命令：
