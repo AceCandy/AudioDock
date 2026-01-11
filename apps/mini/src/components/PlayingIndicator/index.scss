@@ -1,0 +1,24 @@
+.playing-indicator {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  width: 24rpx;
+  height: 24rpx;
+
+  .bar {
+    width: 6rpx;
+    background-color: #333;
+    border-top-left-radius: 2rpx;
+    border-top-right-radius: 2rpx;
+    animation: bounce 0.8s infinite ease-in-out;
+
+    &.bar1 { height: 60%; animation-delay: 0s; }
+    &.bar2 { height: 100%; animation-delay: 0.2s; }
+    &.bar3 { height: 80%; animation-delay: 0.4s; }
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scaleY(0.5); transform-origin: bottom; }
+  50% { transform: scaleY(1); transform-origin: bottom; }
+}

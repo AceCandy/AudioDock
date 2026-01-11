@@ -10,7 +10,7 @@ import './index.scss';
 export default function ArtistDetail() {
   const router = useRouter();
   const { id } = router.params;
-  const { playTrack, currentTrack, isPlaying } = usePlayer();
+  const { playTrackList, currentTrack, isPlaying } = usePlayer();
   
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -68,7 +68,7 @@ export default function ArtistDetail() {
     <View className='artist-container'>
          <View className='nav-bar'>
              <View className='back-btn' onClick={() => Taro.navigateBack()}>
-                 <Text className='back-icon'>←</Text>
+                 <Text className='back-icon icon icon-back' />
              </View>
          </View>
          <ScrollView scrollY className='content-scroll'>
@@ -116,8 +116,8 @@ export default function ArtistDetail() {
              <View className='section'>
                  <View className='section-header-row'>
                      <Text className='section-title'>所有单曲 ({tracks.length})</Text>
-                     <View className='play-btn' onClick={() => tracks.length > 0 && playTrack(tracks[0])}>
-                         <Text className='play-icon'>▶️</Text>
+                     <View className='play-btn' onClick={() => tracks.length > 0 && playTrackList(tracks, 0)}>
+                         <Text className='play-icon icon icon-play' />
                      </View>
                  </View>
                  <View className='track-list'>
@@ -125,11 +125,11 @@ export default function ArtistDetail() {
                          <View 
                             key={track.id} 
                             className='track-item'
-                            onClick={() => playTrack(track)}
+                            onClick={() => playTrackList(tracks, index)}
                          >
                              <View className='track-idx-container'>
                                 {currentTrack?.id === track.id && isPlaying ? (
-                                    <Text className='active-icon'>🎵</Text>
+                                     <Text className='active-icon icon icon-music' />
                                 ) : (
                                     <Text className={`track-index ${currentTrack?.id === track.id ? 'active' : ''}`}>{index + 1}</Text>
                                 )}

@@ -1,3 +1,4 @@
+import { Album, Artist, Playlist, TrackType, UserAudiobookHistory, UserAudiobookLike, UserTrackHistory, UserTrackLike } from '@soundx/services';
 import Taro from '@tarojs/taro';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { getBaseURL } from '../utils/request';
@@ -6,12 +7,26 @@ import { getBaseURL } from '../utils/request';
 export interface Track {
   id: number;
   name: string;
-  artist: string;
   path: string;
+  artist: string;
+  artistEntity: Artist;
+  album: string;
+  albumEntity: Album;
   cover: string | null;
-  album?: string;
-  duration?: number | null;
-  lyrics?: string | null;
+  duration: number | null;
+  lyrics: string | null;
+  index: number | null;
+  type: TrackType;
+  createdAt: string | Date; // DateTime in Prisma maps to Date object or ISO string in JSON
+  artistId?: number;
+  albumId?: number;
+  folderId?: number;
+  likedByUsers?: UserTrackLike[];
+  listenedByUsers?: UserTrackHistory[];
+  likedAsAudiobookByUsers?: UserAudiobookLike[];
+  listenedAsAudiobookByUsers?: UserAudiobookHistory[];
+  playlists?: Playlist[];
+  progress?: number;
 }
 
 interface PlayerContextType {
@@ -28,6 +43,9 @@ interface PlayerContextType {
   currentTime: number;
   seek: (position: number) => void;
   setTrackList: (list: Track[]) => void;
+  playTrackList: (list: Track[], index: number) => Promise<void>;
+  showPlaylist: boolean;
+  setShowPlaylist: (show: boolean) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType>({
@@ -44,6 +62,9 @@ const PlayerContext = createContext<PlayerContextType>({
   playPrevious: () => {},
   seek: () => {},
   setTrackList: () => {},
+  playTrackList: async () => {},
+  showPlaylist: false,
+  setShowPlaylist: () => {},
 });
 
 export const usePlayer = () => useContext(PlayerContext);
@@ -57,6 +78,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [showPlaylist, setShowPlaylist] = useState(false);
 
   const setTrackList = (list: Track[]) => {
       setTrackListState(list);
@@ -183,6 +205,13 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       bgAudioManager.current?.seek(position);
   };
 
+  const playTrackList = async (list: Track[], index: number) => {
+    setTrackList(list);
+    if (list[index]) {
+      await playTrack(list[index]);
+    }
+  };
+
   return (
     <PlayerContext.Provider
       value={{
@@ -198,7 +227,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         playNext,
         playPrevious,
         seek,
-        setTrackList
+        setTrackList,
+        playTrackList,
+        showPlaylist,
+        setShowPlaylist
       }}
     >
       {children}

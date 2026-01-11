@@ -151,7 +151,7 @@ export default function Search() {
     <View className='search-container'>
       <View className='header'>
          <View className='search-input-box'>
-             <Text className='search-icon'>🔍</Text>
+             <Text className='search-icon icon icon-search' />
              <Input 
                 className='search-input' 
                 placeholder='搜索单曲，艺术家，专辑' 
@@ -161,7 +161,7 @@ export default function Search() {
              />
              {keyword.length > 0 && (
                  <View className='clear-btn' onClick={() => { setKeyword(''); setResults({ tracks: [], artists: [], albums: [] }); }}>
-                     <Text className='clear-icon'>✕</Text>
+                     <Text className='clear-icon icon icon-close' />
                  </View>
              )}
          </View>
