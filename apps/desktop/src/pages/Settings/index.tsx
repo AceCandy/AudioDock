@@ -1,13 +1,16 @@
 import { FolderOpenOutlined } from "@ant-design/icons";
 import { Button, ColorPicker, Divider, Input, InputNumber, Select, Space, Switch, Typography, theme } from "antd";
 import React from "react";
+import { useAuthStore } from "../../store/auth";
 import { useSettingsStore } from "../../store/settings";
+import AdminSettings from "./AdminSettings";
 import styles from "./index.module.less";
 
 const { Title, Text } = Typography;
 
 const Settings: React.FC = () => {
   const { token } = theme.useToken();
+  const { user } = useAuthStore();
   const {
     general,
     desktopLyric,
@@ -59,6 +62,16 @@ const Settings: React.FC = () => {
       <header className={styles.header}>
         <Title level={2} className={styles.title}>设置</Title>
       </header>
+
+      {user?.is_admin && (
+        <>
+            <section className={styles.section}>
+                <Title level={4} className={styles.sectionTitle}>管理后台</Title>
+                <AdminSettings />
+            </section>
+            <Divider className={styles.divider} />
+        </>
+      )}
       
       <Divider className={styles.divider} />
 

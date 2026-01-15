@@ -38,6 +38,8 @@ export class AuthService {
       username,
       password,
       is_admin: false,
+      createdAt: new Date(),
+      expiresAt: null,
     });
   }
 

@@ -151,6 +151,8 @@ export interface User {
   username: string;
   password?: string;
   is_admin: boolean;
+  expiresAt?: string | Date | null;
+  createdAt?: string | Date;
   likedTracks?: UserTrackLike[];
   listenedTracks?: UserTrackHistory[];
   likedAlbums?: UserAlbumLike[];

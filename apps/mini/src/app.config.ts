@@ -8,7 +8,9 @@ export default defineAppConfig({
     'pages/player/index',
     'pages/artist/index',
     'pages/album/index',
-    'pages/settings/index'
+    'pages/album/index',
+    'pages/settings/index',
+    'pages/admin/index'
   ],
   window: {
     backgroundTextStyle: 'light',

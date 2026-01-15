@@ -111,4 +111,38 @@ export class UserService {
       });
     }
   }
+
+  // === 系统设置相关 ===
+  async getSetting(key: string): Promise<string | null> {
+    const setting = await this.prisma.systemSetting.findUnique({
+      where: { key },
+    });
+    return setting ? setting.value : null;
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    await this.prisma.systemSetting.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+  }
+
+  async isRegistrationAllowed(): Promise<boolean> {
+    const value = await this.getSetting('allow_registration');
+    return value !== 'false'; // 默认为 true
+  }
+
+  // === 用户过期相关 ===
+  async setUserExpiration(id: number, days: number | null): Promise<User> {
+    let expiresAt: Date | null = null;
+    if (days !== null) {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + days);
+    }
+    return await this.prisma.user.update({
+      where: { id },
+      data: { expiresAt },
+    });
+  }
 }

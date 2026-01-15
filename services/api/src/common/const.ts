@@ -23,6 +23,10 @@ export interface INotFoundResponse extends IResponse {
   code: 404;
 }
 
+export interface IForbiddenResponse extends IResponse {
+  code: 403;
+}
+
 export interface ITableData<T> {
   pageSize: number;
   current: number;

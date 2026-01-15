@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import jwtConfig from './config/jwt.config';
+import { AdminController } from './controllers/admin.controller';
 import { AlbumController } from './controllers/album';
 import { ArtistController } from './controllers/artist';
 import { AudiobookController } from './controllers/audiobook';
@@ -70,6 +71,7 @@ import { UserTrackLikeService } from './services/user-track-like';
   ],
   controllers: [
     UserController,
+    AdminController,
     AuthController,
     AlbumController,
     ArtistController,

@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../src/context/AuthContext";
@@ -22,7 +22,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { colors, theme, toggleTheme } = useTheme();
   const { mode, setMode } = usePlayMode();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { acceptRelay, acceptSync, cacheEnabled, autoOrientation, autoTheme, updateSetting } = useSettings();
   const [cacheSize, setCacheSize] = React.useState<string>("0 B");
 
@@ -163,6 +163,22 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.primary }]}>账户</Text>
+          
+          {user?.is_admin && (
+             <TouchableOpacity 
+                style={[styles.settingRow, { borderBottomColor: colors.border }]}
+                onPress={() => router.push("/admin" as any)}
+              >
+                <View style={styles.settingInfo}>
+                  <Text style={[styles.settingLabel, { color: colors.text }]}>管理后台</Text>
+                  <Text style={[styles.settingDescription, { color: colors.secondary }]}>
+                    用户与系统设置
+                  </Text>
+                </View>
+                <Ionicons name="settings-outline" size={20} color={colors.secondary} />
+              </TouchableOpacity>
+          )}
+
           <TouchableOpacity 
             style={styles.logoutButton} 
             onPress={() => {

@@ -71,6 +71,19 @@ export default function Settings() {
         </View>
 
         <View className='section'>
+           <Text className='section-title'>管理</Text>
+           {user?.is_admin && (
+             <View className='setting-row' onClick={() => Taro.navigateTo({ url: '/pages/admin/index' })}>
+                <View className='setting-info'>
+                   <Text className='setting-label'>管理后台</Text>
+                   <Text className='setting-description'>用户与系统设置</Text>
+                </View>
+                <Text style={{ color: '#999' }}>&gt;</Text>
+             </View>
+           )}
+        </View>
+
+        <View className='section'>
           <Text className='section-title'>账户</Text>
           <View className='user-info'>
             <Text className='username'>{user?.username || '未登录'}</Text>

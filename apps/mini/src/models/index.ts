@@ -19,6 +19,8 @@ export interface User {
   username: string;
   password?: string;
   is_admin: boolean;
+  expiresAt?: string | null;
+  createdAt?: string;
   likedTracks?: any[]; // Simplified for now
   listenedTracks?: any[];
   playlists?: any[];

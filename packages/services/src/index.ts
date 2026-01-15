@@ -8,6 +8,7 @@ export * from "./playlist";
 export * from "./request";
 export * from "./search";
 
+export * from "./admin";
 export * from "./search-record";
 export * from "./track";
 export * from "./user";

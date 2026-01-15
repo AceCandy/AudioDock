@@ -23,6 +23,7 @@ const Detail = lazy(() => import("./components/Detail/index"));
 const Settings = lazy(() => import("./pages/Settings/index"));
 const Folder = lazy(() => import("./pages/Folder/index"));
 const Downloads = lazy(() => import("./pages/Downloads/index"));
+const UserManagement = lazy(() => import("./pages/Admin/UserManagement/index"));
 
 import { useEffect } from "react";
 import InviteListener from "./components/InviteListener";
@@ -160,6 +161,7 @@ const AppContent = () => {
                   <Route path="/folders" element={<Folder />} />
                   <Route path="/folder/:id" element={<Folder />} />
                   <Route path="/downloads" element={<Downloads />} />
+                  <Route path="/admin/users" element={<UserManagement />} />
                 </Routes>
               </Suspense>
             </div>

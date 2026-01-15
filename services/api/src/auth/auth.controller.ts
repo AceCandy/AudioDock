@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Device, User } from '@soundx/db';
-import { IErrorResponse, IParamsErrorResponse, ISuccessResponse } from 'src/common/const';
+import { IErrorResponse, IForbiddenResponse, IParamsErrorResponse, ISuccessResponse } from 'src/common/const';
 import { Public } from '../common/public.decorator';
 import { AuthService } from './auth.service';
 
@@ -48,7 +48,7 @@ export class AuthController {
   @Post('/auth/register')
   async register(
     @Body() user: { username: string; password: string, deviceName?: string },
-  ): Promise<ISuccessResponse<User & { token: string, device?: Device }> | IErrorResponse | IParamsErrorResponse> {
+  ): Promise<ISuccessResponse<User & { token: string, device?: Device }> | IErrorResponse | IParamsErrorResponse | IForbiddenResponse> {
     try {
       // Check if user already exists
       const existingUser = await this.authService.findUserByUsername(user.username);
@@ -56,6 +56,17 @@ export class AuthController {
         return {
           code: 400,
           message: '用户名已存在',
+        };
+      }
+
+      // Check if registration is allowed
+      const isAllowed = await this.userService.isRegistrationAllowed();
+      // First user is always allowed (will be admin)
+      const userCount = await this.userService.userCount();
+      if (!isAllowed && userCount > 0) {
+        return {
+          code: 403,
+          message: '注册功能已关闭',
         };
       }
 

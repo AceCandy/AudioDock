@@ -64,6 +64,11 @@ export type UserAudiobookHistory = $Result.DefaultSelection<Prisma.$UserAudioboo
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model SystemSetting
+ * 
+ */
+export type SystemSetting = $Result.DefaultSelection<Prisma.$SystemSettingPayload>
+/**
  * Model SearchRecord
  * 
  */
@@ -325,6 +330,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.systemSetting`: Exposes CRUD operations for the **SystemSetting** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SystemSettings
+    * const systemSettings = await prisma.systemSetting.findMany()
+    * ```
+    */
+  get systemSetting(): Prisma.SystemSettingDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.searchRecord`: Exposes CRUD operations for the **SearchRecord** model.
@@ -815,6 +830,7 @@ export namespace Prisma {
     UserAudiobookLike: 'UserAudiobookLike',
     UserAudiobookHistory: 'UserAudiobookHistory',
     User: 'User',
+    SystemSetting: 'SystemSetting',
     SearchRecord: 'SearchRecord',
     Device: 'Device',
     Playlist: 'Playlist',
@@ -837,7 +853,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "track" | "album" | "artist" | "userTrackLike" | "userTrackHistory" | "userAlbumLike" | "userAlbumHistory" | "userAudiobookLike" | "userAudiobookHistory" | "user" | "searchRecord" | "device" | "playlist" | "folder"
+      modelProps: "track" | "album" | "artist" | "userTrackLike" | "userTrackHistory" | "userAlbumLike" | "userAlbumHistory" | "userAudiobookLike" | "userAudiobookHistory" | "user" | "systemSetting" | "searchRecord" | "device" | "playlist" | "folder"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1581,6 +1597,80 @@ export namespace Prisma {
           }
         }
       }
+      SystemSetting: {
+        payload: Prisma.$SystemSettingPayload<ExtArgs>
+        fields: Prisma.SystemSettingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SystemSettingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SystemSettingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          findFirst: {
+            args: Prisma.SystemSettingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SystemSettingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          findMany: {
+            args: Prisma.SystemSettingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>[]
+          }
+          create: {
+            args: Prisma.SystemSettingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          createMany: {
+            args: Prisma.SystemSettingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.SystemSettingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>[]
+          }
+          delete: {
+            args: Prisma.SystemSettingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          update: {
+            args: Prisma.SystemSettingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          deleteMany: {
+            args: Prisma.SystemSettingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SystemSettingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.SystemSettingUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>[]
+          }
+          upsert: {
+            args: Prisma.SystemSettingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SystemSettingPayload>
+          }
+          aggregate: {
+            args: Prisma.SystemSettingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSystemSetting>
+          }
+          groupBy: {
+            args: Prisma.SystemSettingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SystemSettingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.SystemSettingCountArgs<ExtArgs>
+            result: $Utils.Optional<SystemSettingCountAggregateOutputType> | number
+          }
+        }
+      }
       SearchRecord: {
         payload: Prisma.$SearchRecordPayload<ExtArgs>
         fields: Prisma.SearchRecordFieldRefs
@@ -1971,6 +2061,7 @@ export namespace Prisma {
     userAudiobookLike?: UserAudiobookLikeOmit
     userAudiobookHistory?: UserAudiobookHistoryOmit
     user?: UserOmit
+    systemSetting?: SystemSettingOmit
     searchRecord?: SearchRecordOmit
     device?: DeviceOmit
     playlist?: PlaylistOmit
@@ -12874,6 +12965,8 @@ export namespace Prisma {
     username: string | null
     password: string | null
     is_admin: boolean | null
+    expiresAt: Date | null
+    createdAt: Date | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -12881,6 +12974,8 @@ export namespace Prisma {
     username: string | null
     password: string | null
     is_admin: boolean | null
+    expiresAt: Date | null
+    createdAt: Date | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -12888,6 +12983,8 @@ export namespace Prisma {
     username: number
     password: number
     is_admin: number
+    expiresAt: number
+    createdAt: number
     _all: number
   }
 
@@ -12905,6 +13002,8 @@ export namespace Prisma {
     username?: true
     password?: true
     is_admin?: true
+    expiresAt?: true
+    createdAt?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -12912,6 +13011,8 @@ export namespace Prisma {
     username?: true
     password?: true
     is_admin?: true
+    expiresAt?: true
+    createdAt?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -12919,6 +13020,8 @@ export namespace Prisma {
     username?: true
     password?: true
     is_admin?: true
+    expiresAt?: true
+    createdAt?: true
     _all?: true
   }
 
@@ -13013,6 +13116,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin: boolean
+    expiresAt: Date | null
+    createdAt: Date
     _count: UserCountAggregateOutputType | null
     _avg: UserAvgAggregateOutputType | null
     _sum: UserSumAggregateOutputType | null
@@ -13039,6 +13144,8 @@ export namespace Prisma {
     username?: boolean
     password?: boolean
     is_admin?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
     likedTracks?: boolean | User$likedTracksArgs<ExtArgs>
     listenedTracks?: boolean | User$listenedTracksArgs<ExtArgs>
     likedAlbums?: boolean | User$likedAlbumsArgs<ExtArgs>
@@ -13056,6 +13163,8 @@ export namespace Prisma {
     username?: boolean
     password?: boolean
     is_admin?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13063,6 +13172,8 @@ export namespace Prisma {
     username?: boolean
     password?: boolean
     is_admin?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -13070,9 +13181,11 @@ export namespace Prisma {
     username?: boolean
     password?: boolean
     is_admin?: boolean
+    expiresAt?: boolean
+    createdAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "password" | "is_admin", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "username" | "password" | "is_admin" | "expiresAt" | "createdAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     likedTracks?: boolean | User$likedTracksArgs<ExtArgs>
     listenedTracks?: boolean | User$listenedTracksArgs<ExtArgs>
@@ -13145,6 +13258,14 @@ export namespace Prisma {
        * 是否为管理员用户，默认 false
        */
       is_admin: boolean
+      /**
+       * 用户过离期日期，如果为 null 则永久有效
+       */
+      expiresAt: Date | null
+      /**
+       * 用户创建时间
+       */
+      createdAt: Date
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -13581,6 +13702,8 @@ export namespace Prisma {
     readonly username: FieldRef<"User", 'String'>
     readonly password: FieldRef<"User", 'String'>
     readonly is_admin: FieldRef<"User", 'Boolean'>
+    readonly expiresAt: FieldRef<"User", 'DateTime'>
+    readonly createdAt: FieldRef<"User", 'DateTime'>
   }
     
 
@@ -14198,6 +14321,1007 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SystemSetting
+   */
+
+  export type AggregateSystemSetting = {
+    _count: SystemSettingCountAggregateOutputType | null
+    _avg: SystemSettingAvgAggregateOutputType | null
+    _sum: SystemSettingSumAggregateOutputType | null
+    _min: SystemSettingMinAggregateOutputType | null
+    _max: SystemSettingMaxAggregateOutputType | null
+  }
+
+  export type SystemSettingAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type SystemSettingSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type SystemSettingMinAggregateOutputType = {
+    id: number | null
+    key: string | null
+    value: string | null
+  }
+
+  export type SystemSettingMaxAggregateOutputType = {
+    id: number | null
+    key: string | null
+    value: string | null
+  }
+
+  export type SystemSettingCountAggregateOutputType = {
+    id: number
+    key: number
+    value: number
+    _all: number
+  }
+
+
+  export type SystemSettingAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type SystemSettingSumAggregateInputType = {
+    id?: true
+  }
+
+  export type SystemSettingMinAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+  }
+
+  export type SystemSettingMaxAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+  }
+
+  export type SystemSettingCountAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    _all?: true
+  }
+
+  export type SystemSettingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SystemSetting to aggregate.
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemSettings to fetch.
+     */
+    orderBy?: SystemSettingOrderByWithRelationInput | SystemSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SystemSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SystemSettings
+    **/
+    _count?: true | SystemSettingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SystemSettingAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SystemSettingSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SystemSettingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SystemSettingMaxAggregateInputType
+  }
+
+  export type GetSystemSettingAggregateType<T extends SystemSettingAggregateArgs> = {
+        [P in keyof T & keyof AggregateSystemSetting]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSystemSetting[P]>
+      : GetScalarType<T[P], AggregateSystemSetting[P]>
+  }
+
+
+
+
+  export type SystemSettingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SystemSettingWhereInput
+    orderBy?: SystemSettingOrderByWithAggregationInput | SystemSettingOrderByWithAggregationInput[]
+    by: SystemSettingScalarFieldEnum[] | SystemSettingScalarFieldEnum
+    having?: SystemSettingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SystemSettingCountAggregateInputType | true
+    _avg?: SystemSettingAvgAggregateInputType
+    _sum?: SystemSettingSumAggregateInputType
+    _min?: SystemSettingMinAggregateInputType
+    _max?: SystemSettingMaxAggregateInputType
+  }
+
+  export type SystemSettingGroupByOutputType = {
+    id: number
+    key: string
+    value: string
+    _count: SystemSettingCountAggregateOutputType | null
+    _avg: SystemSettingAvgAggregateOutputType | null
+    _sum: SystemSettingSumAggregateOutputType | null
+    _min: SystemSettingMinAggregateOutputType | null
+    _max: SystemSettingMaxAggregateOutputType | null
+  }
+
+  type GetSystemSettingGroupByPayload<T extends SystemSettingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SystemSettingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SystemSettingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SystemSettingGroupByOutputType[P]>
+            : GetScalarType<T[P], SystemSettingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SystemSettingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+  }, ExtArgs["result"]["systemSetting"]>
+
+  export type SystemSettingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+  }, ExtArgs["result"]["systemSetting"]>
+
+  export type SystemSettingSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+  }, ExtArgs["result"]["systemSetting"]>
+
+  export type SystemSettingSelectScalar = {
+    id?: boolean
+    key?: boolean
+    value?: boolean
+  }
+
+  export type SystemSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value", ExtArgs["result"]["systemSetting"]>
+
+  export type $SystemSettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SystemSetting"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      key: string
+      value: string
+    }, ExtArgs["result"]["systemSetting"]>
+    composites: {}
+  }
+
+  type SystemSettingGetPayload<S extends boolean | null | undefined | SystemSettingDefaultArgs> = $Result.GetResult<Prisma.$SystemSettingPayload, S>
+
+  type SystemSettingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SystemSettingFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SystemSettingCountAggregateInputType | true
+    }
+
+  export interface SystemSettingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SystemSetting'], meta: { name: 'SystemSetting' } }
+    /**
+     * Find zero or one SystemSetting that matches the filter.
+     * @param {SystemSettingFindUniqueArgs} args - Arguments to find a SystemSetting
+     * @example
+     * // Get one SystemSetting
+     * const systemSetting = await prisma.systemSetting.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SystemSettingFindUniqueArgs>(args: SelectSubset<T, SystemSettingFindUniqueArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SystemSetting that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SystemSettingFindUniqueOrThrowArgs} args - Arguments to find a SystemSetting
+     * @example
+     * // Get one SystemSetting
+     * const systemSetting = await prisma.systemSetting.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SystemSettingFindUniqueOrThrowArgs>(args: SelectSubset<T, SystemSettingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SystemSetting that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingFindFirstArgs} args - Arguments to find a SystemSetting
+     * @example
+     * // Get one SystemSetting
+     * const systemSetting = await prisma.systemSetting.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SystemSettingFindFirstArgs>(args?: SelectSubset<T, SystemSettingFindFirstArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SystemSetting that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingFindFirstOrThrowArgs} args - Arguments to find a SystemSetting
+     * @example
+     * // Get one SystemSetting
+     * const systemSetting = await prisma.systemSetting.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SystemSettingFindFirstOrThrowArgs>(args?: SelectSubset<T, SystemSettingFindFirstOrThrowArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SystemSettings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SystemSettings
+     * const systemSettings = await prisma.systemSetting.findMany()
+     * 
+     * // Get first 10 SystemSettings
+     * const systemSettings = await prisma.systemSetting.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const systemSettingWithIdOnly = await prisma.systemSetting.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SystemSettingFindManyArgs>(args?: SelectSubset<T, SystemSettingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SystemSetting.
+     * @param {SystemSettingCreateArgs} args - Arguments to create a SystemSetting.
+     * @example
+     * // Create one SystemSetting
+     * const SystemSetting = await prisma.systemSetting.create({
+     *   data: {
+     *     // ... data to create a SystemSetting
+     *   }
+     * })
+     * 
+     */
+    create<T extends SystemSettingCreateArgs>(args: SelectSubset<T, SystemSettingCreateArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SystemSettings.
+     * @param {SystemSettingCreateManyArgs} args - Arguments to create many SystemSettings.
+     * @example
+     * // Create many SystemSettings
+     * const systemSetting = await prisma.systemSetting.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SystemSettingCreateManyArgs>(args?: SelectSubset<T, SystemSettingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many SystemSettings and returns the data saved in the database.
+     * @param {SystemSettingCreateManyAndReturnArgs} args - Arguments to create many SystemSettings.
+     * @example
+     * // Create many SystemSettings
+     * const systemSetting = await prisma.systemSetting.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many SystemSettings and only return the `id`
+     * const systemSettingWithIdOnly = await prisma.systemSetting.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends SystemSettingCreateManyAndReturnArgs>(args?: SelectSubset<T, SystemSettingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a SystemSetting.
+     * @param {SystemSettingDeleteArgs} args - Arguments to delete one SystemSetting.
+     * @example
+     * // Delete one SystemSetting
+     * const SystemSetting = await prisma.systemSetting.delete({
+     *   where: {
+     *     // ... filter to delete one SystemSetting
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SystemSettingDeleteArgs>(args: SelectSubset<T, SystemSettingDeleteArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SystemSetting.
+     * @param {SystemSettingUpdateArgs} args - Arguments to update one SystemSetting.
+     * @example
+     * // Update one SystemSetting
+     * const systemSetting = await prisma.systemSetting.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SystemSettingUpdateArgs>(args: SelectSubset<T, SystemSettingUpdateArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SystemSettings.
+     * @param {SystemSettingDeleteManyArgs} args - Arguments to filter SystemSettings to delete.
+     * @example
+     * // Delete a few SystemSettings
+     * const { count } = await prisma.systemSetting.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SystemSettingDeleteManyArgs>(args?: SelectSubset<T, SystemSettingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SystemSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SystemSettings
+     * const systemSetting = await prisma.systemSetting.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SystemSettingUpdateManyArgs>(args: SelectSubset<T, SystemSettingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SystemSettings and returns the data updated in the database.
+     * @param {SystemSettingUpdateManyAndReturnArgs} args - Arguments to update many SystemSettings.
+     * @example
+     * // Update many SystemSettings
+     * const systemSetting = await prisma.systemSetting.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more SystemSettings and only return the `id`
+     * const systemSettingWithIdOnly = await prisma.systemSetting.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends SystemSettingUpdateManyAndReturnArgs>(args: SelectSubset<T, SystemSettingUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one SystemSetting.
+     * @param {SystemSettingUpsertArgs} args - Arguments to update or create a SystemSetting.
+     * @example
+     * // Update or create a SystemSetting
+     * const systemSetting = await prisma.systemSetting.upsert({
+     *   create: {
+     *     // ... data to create a SystemSetting
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SystemSetting we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SystemSettingUpsertArgs>(args: SelectSubset<T, SystemSettingUpsertArgs<ExtArgs>>): Prisma__SystemSettingClient<$Result.GetResult<Prisma.$SystemSettingPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of SystemSettings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingCountArgs} args - Arguments to filter SystemSettings to count.
+     * @example
+     * // Count the number of SystemSettings
+     * const count = await prisma.systemSetting.count({
+     *   where: {
+     *     // ... the filter for the SystemSettings we want to count
+     *   }
+     * })
+    **/
+    count<T extends SystemSettingCountArgs>(
+      args?: Subset<T, SystemSettingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SystemSettingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SystemSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SystemSettingAggregateArgs>(args: Subset<T, SystemSettingAggregateArgs>): Prisma.PrismaPromise<GetSystemSettingAggregateType<T>>
+
+    /**
+     * Group by SystemSetting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SystemSettingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SystemSettingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SystemSettingGroupByArgs['orderBy'] }
+        : { orderBy?: SystemSettingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SystemSettingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSystemSettingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SystemSetting model
+   */
+  readonly fields: SystemSettingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SystemSetting.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SystemSettingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SystemSetting model
+   */
+  interface SystemSettingFieldRefs {
+    readonly id: FieldRef<"SystemSetting", 'Int'>
+    readonly key: FieldRef<"SystemSetting", 'String'>
+    readonly value: FieldRef<"SystemSetting", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SystemSetting findUnique
+   */
+  export type SystemSettingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemSetting to fetch.
+     */
+    where: SystemSettingWhereUniqueInput
+  }
+
+  /**
+   * SystemSetting findUniqueOrThrow
+   */
+  export type SystemSettingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemSetting to fetch.
+     */
+    where: SystemSettingWhereUniqueInput
+  }
+
+  /**
+   * SystemSetting findFirst
+   */
+  export type SystemSettingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemSetting to fetch.
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemSettings to fetch.
+     */
+    orderBy?: SystemSettingOrderByWithRelationInput | SystemSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SystemSettings.
+     */
+    cursor?: SystemSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SystemSettings.
+     */
+    distinct?: SystemSettingScalarFieldEnum | SystemSettingScalarFieldEnum[]
+  }
+
+  /**
+   * SystemSetting findFirstOrThrow
+   */
+  export type SystemSettingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemSetting to fetch.
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemSettings to fetch.
+     */
+    orderBy?: SystemSettingOrderByWithRelationInput | SystemSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SystemSettings.
+     */
+    cursor?: SystemSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemSettings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SystemSettings.
+     */
+    distinct?: SystemSettingScalarFieldEnum | SystemSettingScalarFieldEnum[]
+  }
+
+  /**
+   * SystemSetting findMany
+   */
+  export type SystemSettingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter, which SystemSettings to fetch.
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SystemSettings to fetch.
+     */
+    orderBy?: SystemSettingOrderByWithRelationInput | SystemSettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SystemSettings.
+     */
+    cursor?: SystemSettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SystemSettings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SystemSettings.
+     */
+    skip?: number
+    distinct?: SystemSettingScalarFieldEnum | SystemSettingScalarFieldEnum[]
+  }
+
+  /**
+   * SystemSetting create
+   */
+  export type SystemSettingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to create a SystemSetting.
+     */
+    data: XOR<SystemSettingCreateInput, SystemSettingUncheckedCreateInput>
+  }
+
+  /**
+   * SystemSetting createMany
+   */
+  export type SystemSettingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SystemSettings.
+     */
+    data: SystemSettingCreateManyInput | SystemSettingCreateManyInput[]
+  }
+
+  /**
+   * SystemSetting createManyAndReturn
+   */
+  export type SystemSettingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * The data used to create many SystemSettings.
+     */
+    data: SystemSettingCreateManyInput | SystemSettingCreateManyInput[]
+  }
+
+  /**
+   * SystemSetting update
+   */
+  export type SystemSettingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * The data needed to update a SystemSetting.
+     */
+    data: XOR<SystemSettingUpdateInput, SystemSettingUncheckedUpdateInput>
+    /**
+     * Choose, which SystemSetting to update.
+     */
+    where: SystemSettingWhereUniqueInput
+  }
+
+  /**
+   * SystemSetting updateMany
+   */
+  export type SystemSettingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SystemSettings.
+     */
+    data: XOR<SystemSettingUpdateManyMutationInput, SystemSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which SystemSettings to update
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * Limit how many SystemSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SystemSetting updateManyAndReturn
+   */
+  export type SystemSettingUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * The data used to update SystemSettings.
+     */
+    data: XOR<SystemSettingUpdateManyMutationInput, SystemSettingUncheckedUpdateManyInput>
+    /**
+     * Filter which SystemSettings to update
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * Limit how many SystemSettings to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SystemSetting upsert
+   */
+  export type SystemSettingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * The filter to search for the SystemSetting to update in case it exists.
+     */
+    where: SystemSettingWhereUniqueInput
+    /**
+     * In case the SystemSetting found by the `where` argument doesn't exist, create a new SystemSetting with this data.
+     */
+    create: XOR<SystemSettingCreateInput, SystemSettingUncheckedCreateInput>
+    /**
+     * In case the SystemSetting was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SystemSettingUpdateInput, SystemSettingUncheckedUpdateInput>
+  }
+
+  /**
+   * SystemSetting delete
+   */
+  export type SystemSettingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
+    /**
+     * Filter which SystemSetting to delete.
+     */
+    where: SystemSettingWhereUniqueInput
+  }
+
+  /**
+   * SystemSetting deleteMany
+   */
+  export type SystemSettingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SystemSettings to delete
+     */
+    where?: SystemSettingWhereInput
+    /**
+     * Limit how many SystemSettings to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SystemSetting without action
+   */
+  export type SystemSettingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SystemSetting
+     */
+    select?: SystemSettingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SystemSetting
+     */
+    omit?: SystemSettingOmit<ExtArgs> | null
   }
 
 
@@ -18851,10 +19975,21 @@ export namespace Prisma {
     id: 'id',
     username: 'username',
     password: 'password',
-    is_admin: 'is_admin'
+    is_admin: 'is_admin',
+    expiresAt: 'expiresAt',
+    createdAt: 'createdAt'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const SystemSettingScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    value: 'value'
+  };
+
+  export type SystemSettingScalarFieldEnum = (typeof SystemSettingScalarFieldEnum)[keyof typeof SystemSettingScalarFieldEnum]
 
 
   export const SearchRecordScalarFieldEnum: {
@@ -19588,6 +20723,8 @@ export namespace Prisma {
     username?: StringFilter<"User"> | string
     password?: StringFilter<"User"> | string
     is_admin?: BoolFilter<"User"> | boolean
+    expiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
     likedTracks?: UserTrackLikeListRelationFilter
     listenedTracks?: UserTrackHistoryListRelationFilter
     likedAlbums?: UserAlbumLikeListRelationFilter
@@ -19604,6 +20741,8 @@ export namespace Prisma {
     username?: SortOrder
     password?: SortOrder
     is_admin?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
     likedTracks?: UserTrackLikeOrderByRelationAggregateInput
     listenedTracks?: UserTrackHistoryOrderByRelationAggregateInput
     likedAlbums?: UserAlbumLikeOrderByRelationAggregateInput
@@ -19623,6 +20762,8 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     password?: StringFilter<"User"> | string
     is_admin?: BoolFilter<"User"> | boolean
+    expiresAt?: DateTimeNullableFilter<"User"> | Date | string | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
     likedTracks?: UserTrackLikeListRelationFilter
     listenedTracks?: UserTrackHistoryListRelationFilter
     likedAlbums?: UserAlbumLikeListRelationFilter
@@ -19639,6 +20780,8 @@ export namespace Prisma {
     username?: SortOrder
     password?: SortOrder
     is_admin?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -19654,6 +20797,52 @@ export namespace Prisma {
     username?: StringWithAggregatesFilter<"User"> | string
     password?: StringWithAggregatesFilter<"User"> | string
     is_admin?: BoolWithAggregatesFilter<"User"> | boolean
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  }
+
+  export type SystemSettingWhereInput = {
+    AND?: SystemSettingWhereInput | SystemSettingWhereInput[]
+    OR?: SystemSettingWhereInput[]
+    NOT?: SystemSettingWhereInput | SystemSettingWhereInput[]
+    id?: IntFilter<"SystemSetting"> | number
+    key?: StringFilter<"SystemSetting"> | string
+    value?: StringFilter<"SystemSetting"> | string
+  }
+
+  export type SystemSettingOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+  }
+
+  export type SystemSettingWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    key?: string
+    AND?: SystemSettingWhereInput | SystemSettingWhereInput[]
+    OR?: SystemSettingWhereInput[]
+    NOT?: SystemSettingWhereInput | SystemSettingWhereInput[]
+    value?: StringFilter<"SystemSetting"> | string
+  }, "id" | "key">
+
+  export type SystemSettingOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    _count?: SystemSettingCountOrderByAggregateInput
+    _avg?: SystemSettingAvgOrderByAggregateInput
+    _max?: SystemSettingMaxOrderByAggregateInput
+    _min?: SystemSettingMinOrderByAggregateInput
+    _sum?: SystemSettingSumOrderByAggregateInput
+  }
+
+  export type SystemSettingScalarWhereWithAggregatesInput = {
+    AND?: SystemSettingScalarWhereWithAggregatesInput | SystemSettingScalarWhereWithAggregatesInput[]
+    OR?: SystemSettingScalarWhereWithAggregatesInput[]
+    NOT?: SystemSettingScalarWhereWithAggregatesInput | SystemSettingScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"SystemSetting"> | number
+    key?: StringWithAggregatesFilter<"SystemSetting"> | string
+    value?: StringWithAggregatesFilter<"SystemSetting"> | string
   }
 
   export type SearchRecordWhereInput = {
@@ -20472,6 +21661,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -20488,6 +21679,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -20503,6 +21696,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -20519,6 +21714,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -20535,12 +21732,16 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
   }
 
   export type UserUpdateManyMutationInput = {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -20548,6 +21749,47 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SystemSettingCreateInput = {
+    key: string
+    value: string
+  }
+
+  export type SystemSettingUncheckedCreateInput = {
+    id?: number
+    key: string
+    value: string
+  }
+
+  export type SystemSettingUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type SystemSettingUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type SystemSettingCreateManyInput = {
+    id?: number
+    key: string
+    value: string
+  }
+
+  export type SystemSettingUpdateManyMutationInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type SystemSettingUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    key?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
   }
 
   export type SearchRecordCreateInput = {
@@ -21487,6 +22729,8 @@ export namespace Prisma {
     username?: SortOrder
     password?: SortOrder
     is_admin?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type UserAvgOrderByAggregateInput = {
@@ -21498,6 +22742,8 @@ export namespace Prisma {
     username?: SortOrder
     password?: SortOrder
     is_admin?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -21505,9 +22751,37 @@ export namespace Prisma {
     username?: SortOrder
     password?: SortOrder
     is_admin?: SortOrder
+    expiresAt?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type UserSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type SystemSettingCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+  }
+
+  export type SystemSettingAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type SystemSettingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+  }
+
+  export type SystemSettingMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+  }
+
+  export type SystemSettingSumOrderByAggregateInput = {
     id?: SortOrder
   }
 
@@ -23779,6 +25053,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryCreateNestedManyWithoutUserInput
@@ -23794,6 +25070,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -23874,6 +25152,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUpdateManyWithoutUserNestedInput
@@ -23889,6 +25169,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -23959,6 +25241,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryCreateNestedManyWithoutUserInput
@@ -23974,6 +25258,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -24076,6 +25362,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUpdateManyWithoutUserNestedInput
@@ -24091,6 +25379,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -24189,6 +25479,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryCreateNestedManyWithoutUserInput
@@ -24204,6 +25496,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     listenedAlbums?: UserAlbumHistoryUncheckedCreateNestedManyWithoutUserInput
@@ -24260,6 +25554,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUpdateManyWithoutUserNestedInput
@@ -24275,6 +25571,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     listenedAlbums?: UserAlbumHistoryUncheckedUpdateManyWithoutUserNestedInput
@@ -24321,6 +25619,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -24336,6 +25636,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -24392,6 +25694,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -24407,6 +25711,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -24453,6 +25759,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -24468,6 +25776,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -24548,6 +25858,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -24563,6 +25875,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -24633,6 +25947,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -24648,6 +25964,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -24728,6 +26046,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -24743,6 +26063,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -25181,6 +26503,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -25196,6 +26520,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -25226,6 +26552,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -25241,6 +26569,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -25255,6 +26585,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -25270,6 +26602,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -25328,6 +26662,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -25343,6 +26679,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput
@@ -25373,6 +26711,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeCreateNestedManyWithoutUserInput
@@ -25388,6 +26728,8 @@ export namespace Prisma {
     username: string
     password: string
     is_admin?: boolean
+    expiresAt?: Date | string | null
+    createdAt?: Date | string
     likedTracks?: UserTrackLikeUncheckedCreateNestedManyWithoutUserInput
     listenedTracks?: UserTrackHistoryUncheckedCreateNestedManyWithoutUserInput
     likedAlbums?: UserAlbumLikeUncheckedCreateNestedManyWithoutUserInput
@@ -25468,6 +26810,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUpdateManyWithoutUserNestedInput
@@ -25483,6 +26827,8 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     password?: StringFieldUpdateOperationsInput | string
     is_admin?: BoolFieldUpdateOperationsInput | boolean
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     likedTracks?: UserTrackLikeUncheckedUpdateManyWithoutUserNestedInput
     listenedTracks?: UserTrackHistoryUncheckedUpdateManyWithoutUserNestedInput
     likedAlbums?: UserAlbumLikeUncheckedUpdateManyWithoutUserNestedInput

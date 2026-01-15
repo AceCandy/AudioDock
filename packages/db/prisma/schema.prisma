@@ -74,7 +74,7 @@ model Artist {
 
 model UserTrackLike {
   id      Int    @id @default(autoincrement())
-  user    User   @relation(fields: [userId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  Int
   track   Track  @relation(fields: [trackId], references: [id])
   trackId Int
@@ -83,14 +83,14 @@ model UserTrackLike {
 
 model UserTrackHistory {
   id      Int    @id @default(autoincrement())
-  user    User   @relation(fields: [userId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId  Int
   track   Track  @relation(fields: [trackId], references: [id])
   trackId Int
   listenedAt DateTime @default(now())
   progress   Int      @default(0)
   deviceName String
-  device Device @relation(fields: [deviceId], references: [id])
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   deviceId Int
   isSyncMode Boolean @default(false)
 }
@@ -100,7 +100,7 @@ model UserAlbumLike {
   /// 主键 ID，自增
   id       Int    @id @default(autoincrement())
   /// 外键：关联用户
-  user     User   @relation(fields: [userId], references: [id])
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   Int
   /// 外键：关联专辑
   album    Album  @relation(fields: [albumId], references: [id])
@@ -113,7 +113,7 @@ model UserAlbumHistory {
   /// 主键 ID，自增
   id       Int    @id @default(autoincrement())
   /// 外键：关联用户
-  user     User   @relation(fields: [userId], references: [id])
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId   Int
   /// 外键：关联专辑
   album    Album  @relation(fields: [albumId], references: [id])
@@ -126,7 +126,7 @@ model UserAudiobookLike {
   /// 主键 ID，自增
   id        Int    @id @default(autoincrement())
   /// 外键：关联用户
-  user      User   @relation(fields: [userId], references: [id])
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   /// 外键：关联有声书 Track
   track     Track  @relation(fields: [trackId], references: [id])
@@ -139,7 +139,7 @@ model UserAudiobookHistory {
   /// 主键 ID，自增
   id        Int    @id @default(autoincrement())
   /// 外键：关联用户
-  user      User   @relation(fields: [userId], references: [id])
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   /// 外键：关联有声书 Track
   track     Track  @relation(fields: [trackId], references: [id])
@@ -160,6 +160,10 @@ model User {
   password   String
   /// 是否为管理员用户，默认 false
   is_admin   Boolean  @default(false)
+  /// 用户过离期日期，如果为 null 则永久有效
+  expiresAt  DateTime?
+  /// 用户创建时间
+  createdAt  DateTime @default(now())
   /// 用户喜欢的音乐单曲列表
   likedTracks      UserTrackLike[]
   /// 用户听过的音乐单曲历史记录
@@ -180,18 +184,24 @@ model User {
   searchRecords    SearchRecord[]
 }
 
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
 model SearchRecord {
   id        Int      @id @default(autoincrement())
   keyword   String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
 }
 
 model Device {
   id        Int      @id @default(autoincrement())
   name      String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   isOnline  Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -206,7 +216,7 @@ model Playlist {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  user      User      @relation(fields: [userId], references: [id])
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
 
   tracks    Track[]

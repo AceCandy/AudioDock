@@ -1,0 +1,109 @@
+
+.admin-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f7f7f7;
+
+  .header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px; // 30rpx
+    height: 88px; // 88rpx
+    background-color: #ffffff;
+    padding-top: constant(safe-area-inset-top);
+    padding-top: env(safe-area-inset-top);
+    z-index: 10;
+    
+    .back-btn {
+      padding: 10px;
+    }
+    
+    .header-title {
+      font-size: 34px;
+      font-weight: bold;
+    }
+  }
+
+  .content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 40px;
+  }
+
+  .section {
+    margin-top: 30px;
+    background-color: #fff;
+    padding: 0 30px;
+  }
+
+  .section-title {
+      font-size: 28px;
+      color: #888;
+      padding: 20px 30px;
+      display: block;
+      margin-top: 20px;
+  }
+  
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    .setting-label {
+        font-size: 32px;
+        color: #333;
+    }
+  }
+
+  .user-item {
+      padding: 24px 0;
+      border-bottom: 1px solid #f0f0f0;
+      
+      .user-info {
+          display: flex;
+          flex-direction: column;
+          margin-bottom: 16px;
+      }
+      
+      .username {
+          font-size: 32px;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8px;
+      }
+      
+      .user-meta {
+          font-size: 24px;
+          color: #999;
+      }
+
+      .actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 20px;
+
+          .btn {
+              padding: 10px 24px;
+              border-radius: 8px;
+              font-size: 24px;
+              background-color: #f0f0f0;
+              color: #333;
+              
+              &.btn-danger {
+                  background-color: #ff4d4f;
+                  color: #fff;
+              }
+              
+              &.btn-primary {
+                  background-color: #1890ff;
+                  color: #fff;
+              }
+          }
+      }
+  }
+}

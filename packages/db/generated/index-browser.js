@@ -203,7 +203,15 @@ exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
   password: 'password',
-  is_admin: 'is_admin'
+  is_admin: 'is_admin',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.SystemSettingScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  value: 'value'
 };
 
 exports.Prisma.SearchRecordScalarFieldEnum = {
@@ -264,6 +272,7 @@ exports.Prisma.ModelName = {
   UserAudiobookLike: 'UserAudiobookLike',
   UserAudiobookHistory: 'UserAudiobookHistory',
   User: 'User',
+  SystemSetting: 'SystemSetting',
   SearchRecord: 'SearchRecord',
   Device: 'Device',
   Playlist: 'Playlist',
