@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 import TrackPlayer, {
   AppKilledPlaybackBehavior,
   Capability,
@@ -23,7 +23,6 @@ import TrackPlayer, {
 import { Track, TrackType } from "../models";
 import { socketService } from "../services/socket";
 import { resolveArtworkUri, resolveTrackUri } from "../services/trackResolver";
-import { PLAYER_EVENTS, playerEventEmitter } from "../utils/playerEvents";
 import { usePlayMode } from "../utils/playMode";
 import { useAuth } from "./AuthContext";
 import { useNotification } from "./NotificationContext";
@@ -163,29 +162,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         });
 
         // 2️⃣ 只调用一次 updateOptions（不要再 platform 分支）
-        await TrackPlayer.updateOptions({
-          capabilities: [
-            Capability.Play,
-            Capability.Pause,
-            Capability.SkipToNext,
-            Capability.SkipToPrevious,
-            Capability.Stop,
-            Capability.SeekTo,
-          ],
-          // compactCapabilities: [
-          //   Capability.Play,
-          //   Capability.Pause,
-          //   Capability.SkipToNext,
-          //   Capability.SkipToPrevious,
-          // ],
-          progressUpdateEventInterval: 2,
-
-          android: {
-            appKilledPlaybackBehavior:
-              AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
-          },
-        });
-
+        await updatePlayerCapabilities();
         setIsSetup(true);
       } catch (error: any) {
         if (error?.message?.includes("already been initialized")) {
@@ -199,9 +176,17 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setupPlayer();
   }, []);
 
-  // Sync isPlaying state with TrackPlayer events
+  // Sync TrackPlayer events
   useTrackPlayerEvents(
-    [Event.PlaybackState, Event.PlaybackError, Event.PlaybackQueueEnded],
+    [
+      Event.PlaybackState,
+      Event.PlaybackError,
+      Event.PlaybackQueueEnded,
+      Event.RemoteNext,
+      Event.RemotePrevious,
+      Event.RemoteJumpForward,
+      Event.RemoteJumpBackward,
+    ],
     async (event) => {
       if (event.type === Event.PlaybackError) {
         console.error(
@@ -217,6 +202,18 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       if (event.type === Event.PlaybackQueueEnded) {
         playNext();
+      }
+      if (event.type === Event.RemoteNext) {
+        playNext();
+      }
+      if (event.type === Event.RemotePrevious) {
+        playPrevious();
+      }
+      if (event.type === Event.RemoteJumpForward) {
+        seekTo(positionRef.current + (event.interval || 15));
+      }
+      if (event.type === Event.RemoteJumpBackward) {
+        seekTo(Math.max(0, positionRef.current - (event.interval || 15)));
       }
     }
   );
@@ -251,6 +248,49 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     if (list.length === 0) return -1;
     if (currentIndex > 0) return currentIndex - 1;
     return list.length - 1;
+  };
+
+  const updatePlayerCapabilities = async (track?: Track) => {
+    const isAudiobookAndroid =
+      Platform.OS === "android" && track?.type === TrackType.AUDIOBOOK;
+
+    const capabilities = [
+      Capability.Play,
+      Capability.Pause,
+      Capability.SkipToNext,
+      Capability.SkipToPrevious,
+      Capability.Stop,
+      Capability.SeekTo,
+    ];
+
+    const compactCapabilities = [
+      Capability.Play,
+      Capability.Pause,
+      Capability.SkipToNext,
+      Capability.SkipToPrevious,
+    ];
+
+    if (isAudiobookAndroid) {
+      capabilities.push(Capability.JumpBackward);
+      capabilities.push(Capability.JumpForward);
+      // For some Android versions, jump buttons are preferred in compact view for audiobooks
+      compactCapabilities.push(Capability.JumpBackward);
+      compactCapabilities.push(Capability.JumpForward);
+    }
+
+    await TrackPlayer.updateOptions({
+      capabilities,
+      compactCapabilities,
+      // @ts-ignore
+      jumpForwardInterval: 15,
+      // @ts-ignore
+      jumpBackwardInterval: 15,
+      progressUpdateEventInterval: 2,
+      android: {
+        appKilledPlaybackBehavior:
+          AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+      },
+    } as any);
   };
 
   const playNext = async () => {
@@ -290,25 +330,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // Handle lock screen / control center buttons via shared event emitter
-  useEffect(() => {
-    const onRemoteNext = () => playNext();
-    const onRemotePrev = () => playPrevious();
-
-    playerEventEmitter.on(PLAYER_EVENTS.REMOTE_NEXT, onRemoteNext);
-    playerEventEmitter.on(PLAYER_EVENTS.REMOTE_PREVIOUS, onRemotePrev);
-
-    return () => {
-      playerEventEmitter.removeListener(
-        PLAYER_EVENTS.REMOTE_NEXT,
-        onRemoteNext
-      );
-      playerEventEmitter.removeListener(
-        PLAYER_EVENTS.REMOTE_PREVIOUS,
-        onRemotePrev
-      );
-    };
-  }, [playNext, playPrevious]);
 
   const togglePlayMode = () => {
     const modes = Object.values(PlayMode);
@@ -369,6 +390,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             await TrackPlayer.seekTo(state.position);
           }
 
+          await updatePlayerCapabilities(track);
           setCurrentTrack(track);
         }
       } else {
@@ -429,23 +451,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         duration: track.duration || 0,
       });
 
-      // Update capabilities (Universal for all track types)
-      await TrackPlayer.updateOptions({
-        capabilities: [
-          Capability.Play,
-          Capability.Pause,
-          Capability.SkipToNext,
-          Capability.SkipToPrevious,
-          Capability.Stop,
-          Capability.SeekTo,
-        ],
-        // compactCapabilities: [
-        //   Capability.Play,
-        //   Capability.Pause,
-        //   Capability.SkipToNext,
-        //   Capability.SkipToPrevious,
-        // ],
-      });
+      await updatePlayerCapabilities(track);
 
       if (initialPosition) {
         await TrackPlayer.seekTo(initialPosition);

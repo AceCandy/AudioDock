@@ -1,5 +1,4 @@
 import TrackPlayer, { Event } from 'react-native-track-player';
-import { PLAYER_EVENTS, playerEventEmitter } from '../utils/playerEvents';
 
 export const PlaybackService = async function () {
     console.log('[PlaybackService] Registered');
@@ -15,13 +14,19 @@ export const PlaybackService = async function () {
     });
 
     TrackPlayer.addEventListener(Event.RemoteNext, () => {
-        console.log('[PlaybackService] Event.RemoteNext - Emitting custom event');
-        playerEventEmitter.emit(PLAYER_EVENTS.REMOTE_NEXT);
+        console.log('[PlaybackService] Event.RemoteNext');
     });
 
     TrackPlayer.addEventListener(Event.RemotePrevious, () => {
-        console.log('[PlaybackService] Event.RemotePrevious - Emitting custom event');
-        playerEventEmitter.emit(PLAYER_EVENTS.REMOTE_PREVIOUS);
+        console.log('[PlaybackService] Event.RemotePrevious');
+    });
+
+    TrackPlayer.addEventListener(Event.RemoteJumpForward, (event) => {
+        console.log('[PlaybackService] Event.RemoteJumpForward', event);
+    });
+
+    TrackPlayer.addEventListener(Event.RemoteJumpBackward, (event) => {
+        console.log('[PlaybackService] Event.RemoteJumpBackward', event);
     });
 
     TrackPlayer.addEventListener(Event.RemoteSeek, (event) => {
