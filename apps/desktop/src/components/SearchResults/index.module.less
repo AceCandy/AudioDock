@@ -163,3 +163,31 @@
   border-radius: 2px;
   font-weight: bold;
 }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.resultItem:hover .actions {
+  opacity: 1;
+}
+
+.actionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ant-color-text-secondary);
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: var(--ant-color-bg-text-hover);
+    color: var(--ant-color-primary);
+  }
+}
