@@ -86,7 +86,7 @@ export const AddToPlaylistModal: React.FC<AddToPlaylistModalProps> = ({
     <Modal
       visible={visible}
       transparent={true}
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <TouchableOpacity

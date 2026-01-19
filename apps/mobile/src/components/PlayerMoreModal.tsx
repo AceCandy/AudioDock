@@ -5,13 +5,13 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isCached } from "../services/cache";
@@ -185,7 +185,7 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
       <Modal
         visible={visible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={onClose}
       >
         <Pressable style={styles.backdrop} onPress={onClose}>

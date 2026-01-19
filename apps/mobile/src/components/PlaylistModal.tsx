@@ -9,15 +9,15 @@ import { getAlbumHistory, getFavoriteAlbums, getFavoriteTracks, getTrackHistory 
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Image,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getBaseURL } from "../https";
@@ -181,7 +181,7 @@ export const PlaylistModal = () => {
     <Modal
       visible={showPlaylist}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={() => setShowPlaylist(false)}
     >
       <Pressable style={styles.backdrop} onPress={() => setShowPlaylist(false)}>

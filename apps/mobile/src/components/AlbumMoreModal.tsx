@@ -65,7 +65,7 @@ export const AlbumMoreModal: React.FC<AlbumMoreModalProps> = ({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <Pressable style={styles.backdrop} onPress={onClose}>

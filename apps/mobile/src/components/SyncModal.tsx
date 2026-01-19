@@ -100,7 +100,7 @@ const SyncModal: React.FC<SyncModalProps> = ({ visible, onClose }) => {
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <TouchableOpacity 
