@@ -157,7 +157,7 @@ export default function ArtistDetailScreen() {
                   />
                   {(album.type === "AUDIOBOOK") &&
                     (album as any).progress > 0 && (
-                      <View style={styles.progressOverlay}>
+                      <View style={[styles.progressOverlay, { width: 120 - 6 }]}>
                         <View
                           style={[
                             styles.progressBar,

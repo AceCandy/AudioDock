@@ -535,10 +535,11 @@ const styles = StyleSheet.create({
   },
   progressOverlay: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 5,
+    left: 3,
+    right: 3,
     height: 4,
+    width: 120 - 6,
     backgroundColor: "rgba(255, 255, 255, 0.3)",
   },
   progressBar: {
