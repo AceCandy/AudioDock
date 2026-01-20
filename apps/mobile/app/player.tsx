@@ -21,7 +21,7 @@ import {
   Text,
   TouchableOpacity,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PlayerMoreModal } from "../src/components/PlayerMoreModal";
@@ -44,12 +44,6 @@ export const parseLyrics = (lyrics: string): LyricLine[] => {
   const parsed: LyricLine[] = [];
 
   for (const line of lines) {
-    // Match LRC format: [mm:ss.xx], [mm:ss], [hh:mm:ss]
-    // Group 1: Part 1 (mm or hh)
-    // Group 2: Part 2 (ss or mm)
-    // Group 3: Separator (. or :)
-    // Group 4: Part 3 (xx or ss)
-    // Group 5: Text
     const match = line.match(/\[(\d+):(\d+)(?:([\.:])(\d+))?\](.*)/);
     if (match) {
       const part1 = parseInt(match[1]);
@@ -59,14 +53,12 @@ export const parseLyrics = (lyrics: string): LyricLine[] => {
       const text = match[5].trim();
 
       let time = 0;
-      // If separator is ':' and we have 3 parts, assume hh:mm:ss
       if (separator === ":" && part3Str) {
         const hours = part1;
         const minutes = part2;
         const seconds = parseInt(part3Str);
         time = hours * 3600 + minutes * 60 + seconds;
       } else {
-        // Assume mm:ss.xx or mm:ss
         const minutes = part1;
         const seconds = part2;
         const milliseconds = part3Str ? parseInt(part3Str.padEnd(3, "0")) : 0;
@@ -77,11 +69,79 @@ export const parseLyrics = (lyrics: string): LyricLine[] => {
         parsed.push({ time, text });
       }
     } else if (line.trim() && !line.startsWith("[")) {
-      // Plain text without timestamp
       parsed.push({ time: 0, text: line.trim() });
     }
   }
   return parsed.sort((a, b) => a.time - b.time);
+};
+
+const AnimatedLyricLine = ({
+  text,
+  isActive,
+  colors,
+  lyricFontSize,
+  onLayout,
+}: {
+  text: string;
+  isActive: boolean;
+  colors: any;
+  lyricFontSize: number;
+  onLayout?: (e: any) => void;
+}) => {
+  const animatedValue = useRef(new Animated.Value(isActive ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: isActive ? 1 : 0,
+      useNativeDriver: false,
+      friction: 8,
+      tension: 40,
+    }).start();
+  }, [isActive]);
+
+  const color = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.text, colors.primary],
+  });
+
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.1],
+  });
+
+  const opacity = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.4, 1],
+  });
+
+  return (
+    <Animated.View
+      onLayout={onLayout}
+      style={{
+        transform: [{ scale }],
+        opacity,
+        marginVertical: 4,
+        paddingHorizontal: 20,
+        width: "100%",
+        alignItems: "center",
+      }}
+    >
+      <Animated.Text
+        style={[
+          styles.lyricsLine,
+          {
+            color,
+            fontSize: lyricFontSize,
+            lineHeight: lyricFontSize * 2,
+            fontWeight: isActive ? "800" : "500",
+            marginVertical: 0, // Remove margin to avoid extra spacing
+          },
+        ]}
+      >
+        {text}
+      </Animated.Text>
+    </Animated.View>
+  );
 };
 
 export default function PlayerScreen() {
@@ -123,6 +183,7 @@ export default function PlayerScreen() {
   const [isDownloading, setIsDownloading] = useState(false);
   const { user } = useAuth();
   const [lyricFontSize, setLyricFontSize] = useState(16);
+  const lineLayouts = useRef<{ [key: number]: any }>({});
 
   useEffect(() => {
     AsyncStorage.getItem("lyric_font_size").then((val) => {
@@ -261,19 +322,18 @@ export default function PlayerScreen() {
     });
 
     if (activeIndex !== -1) {
-      // If font size changed, we want to re-scroll even if index is the same
-      const dynamicLineHeight = lyricFontSize * 1.5 + 16; // 1.5 is the multiplier, 16 is marginVertical * 2
-      const paddingTop = 20;
-      const activeLineCenterPos =
-        paddingTop + activeIndex * dynamicLineHeight + dynamicLineHeight / 2;
-      const scrollToY = activeLineCenterPos - lyricContainerHeight / 2;
+      const layout = lineLayouts.current[activeIndex];
+      if (layout) {
+        const scrollToY =
+          layout.y + layout.height / 2 - lyricContainerHeight / 2;
 
-      if (activeIndex !== currentLyricIndex || lyricFontSize) {
-        setCurrentLyricIndex(activeIndex);
-        scrollViewRef.current?.scrollTo({
-          y: Math.max(0, scrollToY),
-          animated: true,
-        });
+        if (activeIndex !== currentLyricIndex || lyricFontSize) {
+          setCurrentLyricIndex(activeIndex);
+          scrollViewRef.current?.scrollTo({
+            y: Math.max(0, scrollToY),
+            animated: true,
+          });
+        }
       }
     }
   }, [
@@ -693,7 +753,13 @@ export default function PlayerScreen() {
                 <ScrollView
                   ref={scrollViewRef}
                   style={styles.lyricsScroll}
-                  contentContainerStyle={styles.lyricsScrollContent}
+                  contentContainerStyle={[
+                    styles.lyricsScrollContent,
+                    {
+                      paddingTop: 40, // Small top margin for aesthetics
+                      paddingBottom: lyricContainerHeight / 2,
+                    },
+                  ]}
                   onLayout={(e) =>
                     setLyricContainerHeight(e.nativeEvent.layout.height)
                   }
@@ -707,33 +773,22 @@ export default function PlayerScreen() {
                           lyrics[index + 1].time > position);
 
                       return (
-                        <Text
+                        <AnimatedLyricLine
                           key={index}
-                          style={[
-                            styles.lyricsLine,
-                            {
-                              color: isActive
-                                ? colors.primary
-                                : colors.secondary,
-                              fontSize: isActive
-                                ? lyricFontSize + 2
-                                : lyricFontSize,
-                              lineHeight: lyricFontSize * 1.5,
-                            },
-                            isActive && styles.activeLyricsLine,
-                          ]}
-                        >
-                          {line.text}
-                        </Text>
+                          text={line.text}
+                          isActive={isActive}
+                          colors={colors}
+                          lyricFontSize={lyricFontSize}
+                          onLayout={(e) => {
+                            lineLayouts.current[index] = e.nativeEvent.layout;
+                          }}
+                        />
                       );
                     });
                   })()}
                   {!currentTrack.lyrics && (
                     <Text
-                      style={[
-                        styles.lyricsText,
-                        { color: colors.secondary },
-                      ]}
+                      style={[styles.lyricsText, { color: colors.secondary }]}
                     >
                       暂无歌词
                     </Text>
@@ -787,52 +842,59 @@ export default function PlayerScreen() {
             {showLyrics ? (
               <View style={styles.lyricsContainer}>
                 {currentTrack.lyrics ? (
-                  <ScrollView
-                    ref={scrollViewRef}
-                    style={styles.lyricsScroll}
-                    contentContainerStyle={styles.lyricsScrollContent}
-                    onLayout={(e) =>
-                      setLyricContainerHeight(e.nativeEvent.layout.height)
-                    }
+                  <TouchableOpacity
+                    style={styles.noLyricsContainer}
+                    onPress={() => setShowLyrics(false)}
                   >
-                    {(() => {
-                      const lyrics = parseLyrics(currentTrack.lyrics || "");
-                      return lyrics.map((line, index) => {
-                        const isActive =
-                          line.time <= position &&
-                          (index === lyrics.length - 1 ||
-                            lyrics[index + 1].time > position);
+                    <ScrollView
+                      ref={scrollViewRef}
+                      style={styles.lyricsScroll}
+                      contentContainerStyle={[
+                        styles.lyricsScrollContent,
+                        {
+                          paddingTop: 40, // Small top margin for aesthetics
+                          paddingBottom: lyricContainerHeight / 2,
+                        },
+                      ]}
+                      onLayout={(e) =>
+                        setLyricContainerHeight(e.nativeEvent.layout.height)
+                      }
+                    >
+                      {(() => {
+                        const lyrics = parseLyrics(currentTrack.lyrics || "");
+                        return lyrics.map((line, index) => {
+                          const isActive =
+                            line.time <= position &&
+                            (index === lyrics.length - 1 ||
+                              lyrics[index + 1].time > position);
 
-                        return (
-                          <Text
-                            key={index}
-                            style={[
-                              styles.lyricsLine,
-                              {
-                                color: isActive
-                                  ? colors.primary
-                                  : colors.secondary,
-                                fontSize: isActive
-                                  ? lyricFontSize + 2
-                                  : lyricFontSize,
-                                lineHeight: lyricFontSize * 1.5,
-                              },
-                              isActive && styles.activeLyricsLine,
-                            ]}
-                          >
-                            {line.text}
-                          </Text>
-                        );
-                      });
-                    })()}
-                    {!currentTrack.lyrics && (
-                      <Text
-                        style={[styles.lyricsText, { color: colors.secondary }]}
-                      >
-                        暂无歌词
-                      </Text>
-                    )}
-                  </ScrollView>
+                          return (
+                            <AnimatedLyricLine
+                              key={index}
+                              text={line.text}
+                              isActive={isActive}
+                              colors={colors}
+                              lyricFontSize={lyricFontSize}
+                              onLayout={(e) => {
+                                lineLayouts.current[index] =
+                                  e.nativeEvent.layout;
+                              }}
+                            />
+                          );
+                        });
+                      })()}
+                      {!currentTrack.lyrics && (
+                        <Text
+                          style={[
+                            styles.lyricsText,
+                            { color: colors.secondary },
+                          ]}
+                        >
+                          暂无歌词
+                        </Text>
+                      )}
+                    </ScrollView>
+                  </TouchableOpacity>
                 ) : (
                   <TouchableOpacity
                     style={styles.noLyricsContainer}
@@ -950,7 +1012,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   lyricsScrollContent: {
-    paddingVertical: 20,
     alignItems: "center",
   },
   lyricsLine: {
