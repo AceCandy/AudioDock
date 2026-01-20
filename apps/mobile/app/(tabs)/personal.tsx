@@ -1,31 +1,31 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import {
-    createImportTask,
-    createPlaylist,
-    getAlbumHistory,
-    getFavoriteAlbums,
-    getFavoriteTracks,
-    getImportTask,
-    getPlaylists,
-    getRunningImportTask,
-    getTrackHistory,
-    TaskStatus,
-    type ImportTask
+  createImportTask,
+  createPlaylist,
+  getAlbumHistory,
+  getFavoriteAlbums,
+  getFavoriteTracks,
+  getImportTask,
+  getPlaylists,
+  getRunningImportTask,
+  getTrackHistory,
+  TaskStatus,
+  type ImportTask,
 } from "@soundx/services";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    Image,
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/context/AuthContext";
@@ -33,9 +33,14 @@ import { usePlayer } from "../../src/context/PlayerContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { getBaseURL } from "../../src/https";
 import { Playlist, Track } from "../../src/models";
-import { getDownloadedTracks, removeDownloadedTrack } from "../../src/services/cache";
+import {
+  getDownloadedTracks,
+  removeDownloadedTrack,
+} from "../../src/services/cache";
 import { usePlayMode } from "../../src/utils/playMode";
 
+import { useCheckUpdate } from "@/hooks/useCheckUpdate";
+import { UpdateModal } from "@/src/components/UpdateModal";
 import { Ionicons } from "@expo/vector-icons";
 
 type TabType = "playlists" | "favorites" | "history" | "downloads";
@@ -49,9 +54,11 @@ const StackedCover = ({ tracks }: { tracks: any[] }) => {
       {covers.map((track, index) => {
         let coverUrl = "https://picsum.photos/100";
         if (track.cover) {
-          coverUrl = track.cover.startsWith("http") ? track.cover : `${getBaseURL()}${track.cover}`;
+          coverUrl = track.cover.startsWith("http")
+            ? track.cover
+            : `${getBaseURL()}${track.cover}`;
         }
-        
+
         return (
           <Image
             key={track.id}
@@ -59,18 +66,16 @@ const StackedCover = ({ tracks }: { tracks: any[] }) => {
             style={[
               styles.itemCover,
               styles.stackedCover,
-              { 
+              {
                 zIndex: 4 - index,
                 left: index * 6,
                 top: index * 3,
-                position: index === 0 ? 'relative' : 'absolute',
-                opacity: 1 - (index * 0.1),
+                position: index === 0 ? "relative" : "absolute",
+                opacity: 1 - index * 0.1,
                 borderColor: colors.card,
                 borderWidth: index === 0 ? 0 : 1,
-                transform: [
-                  { scale: 1 - (index * 0.04) },
-                ]
-              }
+                transform: [{ scale: 1 - index * 0.04 }],
+              },
             ]}
           />
         );
@@ -92,35 +97,48 @@ export default function PersonalScreen() {
   const { playTrackList } = usePlayer();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { checkUpdate, progress } = useCheckUpdate();
+
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const [activeTab, setActiveTab] = useState<TabType>("playlists");
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>("track");
   const [loading, setLoading] = useState(false);
-  
+
   const [serverModalVisible, setServerModalVisible] = useState(false);
-  const [serverHistory, setServerHistory] = useState<{label: string, value: string}[]>([]);
+  const [serverHistory, setServerHistory] = useState<
+    { label: string; value: string }[]
+  >([]);
 
   const loadServerHistory = useCallback(async () => {
     const history = await AsyncStorage.getItem("serverHistory");
     if (history) {
       setServerHistory(JSON.parse(history));
     } else {
-      setServerHistory([{ label: 'http://localhost:3000', value: 'http://localhost:3000' }]);
+      setServerHistory([
+        { label: "http://localhost:3000", value: "http://localhost:3000" },
+      ]);
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (serverModalVisible) {
       loadServerHistory();
     }
   }, [serverModalVisible, loadServerHistory]);
-  
+
+  useEffect(() => {
+    checkUpdate();
+  }, []);
+
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [favorites, setFavorites] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [downloads, setDownloads] = useState<Track[]>([]);
   const [downloadedAlbums, setDownloadedAlbums] = useState<any[]>([]);
-  const [selectedDownloadAlbum, setSelectedDownloadAlbum] = useState<any | null>(null);
+  const [selectedDownloadAlbum, setSelectedDownloadAlbum] = useState<
+    any | null
+  >(null);
 
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
@@ -137,30 +155,30 @@ export default function PersonalScreen() {
       if (user) {
         loadData();
       }
-    }, [user, activeTab, activeSubTab, mode])
+    }, [user, activeTab, activeSubTab, mode]),
   );
-  
+
   // Reset selected album when tab changes or mode changes
   useFocusEffect(
-      useCallback(() => {
-          setSelectedDownloadAlbum(null);
-      }, [activeTab, mode])
+    useCallback(() => {
+      setSelectedDownloadAlbum(null);
+    }, [activeTab, mode]),
   );
 
   React.useEffect(() => {
     if (user) {
-        getRunningImportTask().then(res => {
-            if (res.code === 200 && res.data) {
-                const taskId = res.data.id;
-                setImportTask(res.data);
-                setImportModalVisible(true);
+      getRunningImportTask().then((res) => {
+        if (res.code === 200 && res.data) {
+          const taskId = res.data.id;
+          setImportTask(res.data);
+          setImportModalVisible(true);
 
-                if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-                pollTimerRef.current = setInterval(() => {
-                    pollTaskStatus(taskId);
-                }, 1000);
-            }
-        });
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          pollTimerRef.current = setInterval(() => {
+            pollTaskStatus(taskId);
+          }, 1000);
+        }
+      });
     }
   }, [user]);
 
@@ -169,48 +187,52 @@ export default function PersonalScreen() {
     setLoading(true);
     try {
       if (activeTab === "playlists") {
-        const res = await getPlaylists(mode as any, user.id); 
+        const res = await getPlaylists(mode as any, user.id);
         if (res.code === 200) setPlaylists(res.data);
       } else if (activeTab === "favorites") {
         if (mode === "MUSIC" && activeSubTab === "track") {
           const res = await getFavoriteTracks(user.id, 0, 10000, mode as any);
-          if (res.code === 200) setFavorites(res.data.list.map((item: any) => item.track));
+          if (res.code === 200)
+            setFavorites(res.data.list.map((item: any) => item.track));
         } else {
           const res = await getFavoriteAlbums(user.id, 0, 10000, mode as any);
-          if (res.code === 200) setFavorites(res.data.list.map((item: any) => item.album));
+          if (res.code === 200)
+            setFavorites(res.data.list.map((item: any) => item.album));
         }
       } else if (activeTab === "history") {
         if (mode === "MUSIC" && activeSubTab === "track") {
           const res = await getTrackHistory(user.id, 0, 10000, mode as any);
-          if (res.code === 200) setHistory(res.data.list.map((item: any) => item.track));
+          if (res.code === 200)
+            setHistory(res.data.list.map((item: any) => item.track));
         } else {
           const res = await getAlbumHistory(user.id, 0, 10000, mode as any);
-          if (res.code === 200) setHistory(res.data.list.map((item: any) => item.album));
+          if (res.code === 200)
+            setHistory(res.data.list.map((item: any) => item.album));
         }
       } else if (activeTab === "downloads") {
-          const tracks = await getDownloadedTracks();
-          // Filter by current mode? The user might want to see all or filtered.
-          // Usually apps filter by mode.
-          const filtered = tracks.filter(t => t.type === mode);
-          setDownloads(filtered);
-          
-          if (mode === "AUDIOBOOK") {
-              const albumMap = new Map();
-              filtered.forEach(track => {
-                  if (!albumMap.has(track.album)) {
-                      albumMap.set(track.album, {
-                          id: track.album || "unknown", // Use name as ID
-                          name: track.album,
-                          artist: track.artist,
-                          cover: track.cover,
-                          type: "album",
-                          tracks: []
-                      });
-                  }
-                  albumMap.get(track.album).tracks.push(track);
+        const tracks = await getDownloadedTracks();
+        // Filter by current mode? The user might want to see all or filtered.
+        // Usually apps filter by mode.
+        const filtered = tracks.filter((t) => t.type === mode);
+        setDownloads(filtered);
+
+        if (mode === "AUDIOBOOK") {
+          const albumMap = new Map();
+          filtered.forEach((track) => {
+            if (!albumMap.has(track.album)) {
+              albumMap.set(track.album, {
+                id: track.album || "unknown", // Use name as ID
+                name: track.album,
+                artist: track.artist,
+                cover: track.cover,
+                type: "album",
+                tracks: [],
               });
-              setDownloadedAlbums(Array.from(albumMap.values()));
-          }
+            }
+            albumMap.get(track.album).tracks.push(track);
+          });
+          setDownloadedAlbums(Array.from(albumMap.values()));
+        }
       }
     } catch (error) {
       console.error("Failed to load personal data:", error);
@@ -218,32 +240,32 @@ export default function PersonalScreen() {
       setLoading(false);
     }
   };
-  
+
   const handleDeleteDownload = (item: Track) => {
-      Alert.alert("删除下载", "确定要删除这首歌曲的下载吗？", [
-          { text: "取消", style: "cancel" },
-          { 
-              text: "删除", 
-              style: "destructive", 
-              onPress: async () => {
-                  await removeDownloadedTrack(item.id, item.path); // Use path as URL
-                  loadData();
-              }
-          }
-      ]);
+    Alert.alert("删除下载", "确定要删除这首歌曲的下载吗？", [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: async () => {
+          await removeDownloadedTrack(item.id, item.path); // Use path as URL
+          loadData();
+        },
+      },
+    ]);
   };
 
   const handleCreatePlaylist = async () => {
     if (!user || !newPlaylistName.trim()) return;
-    
+
     setCreating(true);
     try {
       const res = await createPlaylist(
         newPlaylistName.trim(),
         mode as any,
-        user.id
+        user.id,
       );
-      
+
       if (res.code === 200) {
         setCreateModalVisible(false);
         setNewPlaylistName("");
@@ -259,47 +281,43 @@ export default function PersonalScreen() {
 
   const handleUpdateLibrary = async (updateMode: "incremental" | "full") => {
     setMenuVisible(false);
-    
-    const startTask = async () => {
-        try {
-            const res = await createImportTask({ mode: updateMode });
-            if (res.code === 200 && res.data) {
-                const taskId = res.data.id;
-                setImportModalVisible(true);
-                setImportTask({ id: taskId, status: TaskStatus.INITIALIZING });
 
-                if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-                pollTimerRef.current = setInterval(() => {
-                    pollTaskStatus(taskId);
-                }, 1000);
-            } else {
-                Alert.alert("错误", res.message || "任务创建失败");
-            }
-        } catch (error) {
-            console.error("Task creation error:", error);
-            Alert.alert("错误", "创建任务失败，请检查网络或后端服务");
+    const startTask = async () => {
+      try {
+        const res = await createImportTask({ mode: updateMode });
+        if (res.code === 200 && res.data) {
+          const taskId = res.data.id;
+          setImportModalVisible(true);
+          setImportTask({ id: taskId, status: TaskStatus.INITIALIZING });
+
+          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+          pollTimerRef.current = setInterval(() => {
+            pollTaskStatus(taskId);
+          }, 1000);
+        } else {
+          Alert.alert("错误", res.message || "任务创建失败");
         }
+      } catch (error) {
+        console.error("Task creation error:", error);
+        Alert.alert("错误", "创建任务失败，请检查网络或后端服务");
+      }
     };
 
     if (updateMode === "full") {
-        Alert.alert(
-            "确认全量更新？",
-            "全量更新将清空所有歌曲、专辑、艺术家、播放列表以及您的播放历史和收藏记录！此操作不可恢复。",
-            [
-                { text: "取消", style: "cancel" },
-                { text: "确认清空并更新", style: "destructive", onPress: startTask }
-            ]
-        );
+      Alert.alert(
+        "确认全量更新？",
+        "全量更新将清空所有歌曲、专辑、艺术家、播放列表以及您的播放历史和收藏记录！此操作不可恢复。",
+        [
+          { text: "取消", style: "cancel" },
+          { text: "确认清空并更新", style: "destructive", onPress: startTask },
+        ],
+      );
     } else {
-        // Incremental confirmation
-        Alert.alert(
-            "确认增量更新？",
-            "增量更新只增加新数据，不删除旧数据",
-            [
-                { text: "取消", style: "cancel" },
-                { text: "确认更新", onPress: startTask }
-            ]
-        );
+      // Incremental confirmation
+      Alert.alert("确认增量更新？", "增量更新只增加新数据，不删除旧数据", [
+        { text: "取消", style: "cancel" },
+        { text: "确认更新", onPress: startTask },
+      ]);
     }
   };
 
@@ -323,126 +341,168 @@ export default function PersonalScreen() {
   };
 
   React.useEffect(() => {
-      return () => {
-          if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-      }
+    return () => {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+    };
   }, []);
 
-  const renderItem = React.useCallback(({ item }: { item: any }) => {
-    const isPlaylist = activeTab === "playlists";
-    const isAlbum = activeTab !== "playlists" && activeTab !== "downloads" && (mode === "AUDIOBOOK" || activeSubTab === "album");
-    const isDownloadAlbum = activeTab === "downloads" && mode === "AUDIOBOOK" && !selectedDownloadAlbum && (item.type === "album");
-    
-    // For downloads, if we are in audiobook mode and selected an album, we render tracks. 
-    // Wait, FlatList data source is controlled.
-    
-    const data = item;
-    let coverUrl = "https://picsum.photos/100";
-    
-    if (item.cover) {
-      // For local tracks, item.cover might be local path? Or we saved the global URL?
-      // Our save logic saved the whole track object as is, including cover URL.
-      // But if we are offline, we can't load http cover.
-      // Ideally we cached cover too. But we didn't implement cover caching.
-      // We will assume online for now, or fallback.
-      coverUrl = item.cover.startsWith("http") ? item.cover : `${getBaseURL()}${item.cover}`;
-    }
-    
-    return (
-      <TouchableOpacity 
-        style={[styles.item, { borderBottomColor: colors.border }]}
-        onPress={async () => {
-          if (isPlaylist) {
-            router.push(`/playlist/${(data as Playlist).id}`);
-          } else if (isAlbum) {
-            router.push(`/album/${data.id}`);
-          } else if (activeTab === "downloads") {
+  const renderItem = React.useCallback(
+    ({ item }: { item: any }) => {
+      const isPlaylist = activeTab === "playlists";
+      const isAlbum =
+        activeTab !== "playlists" &&
+        activeTab !== "downloads" &&
+        (mode === "AUDIOBOOK" || activeSubTab === "album");
+      const isDownloadAlbum =
+        activeTab === "downloads" &&
+        mode === "AUDIOBOOK" &&
+        !selectedDownloadAlbum &&
+        item.type === "album";
+
+      // For downloads, if we are in audiobook mode and selected an album, we render tracks.
+      // Wait, FlatList data source is controlled.
+
+      const data = item;
+      let coverUrl = "https://picsum.photos/100";
+
+      if (item.cover) {
+        // For local tracks, item.cover might be local path? Or we saved the global URL?
+        // Our save logic saved the whole track object as is, including cover URL.
+        // But if we are offline, we can't load http cover.
+        // Ideally we cached cover too. But we didn't implement cover caching.
+        // We will assume online for now, or fallback.
+        coverUrl = item.cover.startsWith("http")
+          ? item.cover
+          : `${getBaseURL()}${item.cover}`;
+      }
+
+      return (
+        <TouchableOpacity
+          style={[styles.item, { borderBottomColor: colors.border }]}
+          onPress={async () => {
+            if (isPlaylist) {
+              router.push(`/playlist/${(data as Playlist).id}`);
+            } else if (isAlbum) {
+              router.push(`/album/${data.id}`);
+            } else if (activeTab === "downloads") {
               if (isDownloadAlbum) {
-                  // Enter album
-                  setSelectedDownloadAlbum(data);
+                // Enter album
+                setSelectedDownloadAlbum(data);
               } else {
-                  // Play downloaded track
-                  // Data source depends on view.
-                  const list = selectedDownloadAlbum ? selectedDownloadAlbum.tracks : downloads;
-                  const index = list.findIndex((t: Track) => t.id === (data as Track).id);
-                  playTrackList(list, index);
+                // Play downloaded track
+                // Data source depends on view.
+                const list = selectedDownloadAlbum
+                  ? selectedDownloadAlbum.tracks
+                  : downloads;
+                const index = list.findIndex(
+                  (t: Track) => t.id === (data as Track).id,
+                );
+                playTrackList(list, index);
               }
-          } else {
-            const list = activeTab === "favorites" ? favorites : history;
-            const index = list.findIndex(t => t.id === (data as Track).id);
-            playTrackList(list, index);
-          }
-        }}
-        onLongPress={() => {
-            if (activeTab === "downloads" && !isDownloadAlbum) {
-                handleDeleteDownload(data as Track);
+            } else {
+              const list = activeTab === "favorites" ? favorites : history;
+              const index = list.findIndex((t) => t.id === (data as Track).id);
+              playTrackList(list, index);
             }
-        }}
-      >
-        {isPlaylist ? (
-          <StackedCover tracks={(item as Playlist).tracks || []} />
-        ) : (
-          <View style={{ position: 'relative' }}>
-            {isDownloadAlbum ? (
+          }}
+          onLongPress={() => {
+            if (activeTab === "downloads" && !isDownloadAlbum) {
+              handleDeleteDownload(data as Track);
+            }
+          }}
+        >
+          {isPlaylist ? (
+            <StackedCover tracks={(item as Playlist).tracks || []} />
+          ) : (
+            <View style={{ position: "relative" }}>
+              {isDownloadAlbum ? (
                 // Use a folder icon or similar if cover missing?
                 // Or just use first track cover if we aggregated?
                 // We passed cover in albumMap.
-                 <Image
-                  source={{ uri: coverUrl }}
-                  style={styles.itemCover}
-                />
-            ) : (
-                <Image
-                  source={{ uri: coverUrl }}
-                  style={styles.itemCover}
-                />
-            )}
-            
-            {/* Progress Bar for Audiobook Albums */}
-            {(isAlbum || isDownloadAlbum) && activeTab === "history" && mode === "AUDIOBOOK" && (data as any).progress > 0 && (
-                <View style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 15, // marginRight of cover
-                    height: 3,
-                    backgroundColor: 'rgba(0,0,0,0.3)'
-                }}>
-                   <View style={{
-                       width: `${(data as any).progress}%`,
-                       height: '100%',
-                       backgroundColor: colors.primary
-                   }} />
-                </View>
-            )}
+                <Image source={{ uri: coverUrl }} style={styles.itemCover} />
+              ) : (
+                <Image source={{ uri: coverUrl }} style={styles.itemCover} />
+              )}
+
+              {/* Progress Bar for Audiobook Albums */}
+              {(isAlbum || isDownloadAlbum) &&
+                activeTab === "history" &&
+                mode === "AUDIOBOOK" &&
+                (data as any).progress > 0 && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 15, // marginRight of cover
+                      height: 3,
+                      backgroundColor: "rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: `${(data as any).progress}%`,
+                        height: "100%",
+                        backgroundColor: colors.primary,
+                      }}
+                    />
+                  </View>
+                )}
+            </View>
+          )}
+          <View style={styles.itemInfo}>
+            <Text
+              style={[styles.itemTitle, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {data.name}
+            </Text>
+            <Text style={[styles.itemSubtitle, { color: colors.secondary }]}>
+              {isPlaylist
+                ? `${(data as Playlist)._count?.tracks || (data as Playlist).tracks?.length || 0} 首`
+                : isAlbum || isDownloadAlbum
+                  ? data.artist || ""
+                  : (data as Track).artist}
+            </Text>
           </View>
-        )}
-        <View style={styles.itemInfo}>
-          <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={1}>
-            {data.name}
-          </Text>
-          <Text style={[styles.itemSubtitle, { color: colors.secondary }]}>
-            {isPlaylist 
-              ? `${(data as Playlist)._count?.tracks || (data as Playlist).tracks?.length || 0} 首` 
-              : ((isAlbum || isDownloadAlbum) ? (data.artist || "") : (data as Track).artist)}
-          </Text>
-        </View>
-        
-        {activeTab === "downloads" && !isDownloadAlbum && (
-             <TouchableOpacity style={{ padding: 10 }} onPress={() => handleDeleteDownload(data)}>
-                 <Ionicons name="trash-outline" size={20} color={colors.secondary} />
-             </TouchableOpacity>
-        )}
-      </TouchableOpacity>
-    );
-  }, [activeTab, activeSubTab, colors, favorites, history, downloads, selectedDownloadAlbum, downloadModeList(), playTrackList, mode]); // Need helper for download list dependency?
-  
+
+          {activeTab === "downloads" && !isDownloadAlbum && (
+            <TouchableOpacity
+              style={{ padding: 10 }}
+              onPress={() => handleDeleteDownload(data)}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color={colors.secondary}
+              />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      );
+    },
+    [
+      activeTab,
+      activeSubTab,
+      colors,
+      favorites,
+      history,
+      downloads,
+      selectedDownloadAlbum,
+      downloadModeList(),
+      playTrackList,
+      mode,
+    ],
+  ); // Need helper for download list dependency?
+
   function downloadModeList() {
-      if (activeTab !== "downloads") return [];
-      if (mode === "AUDIOBOOK") {
-          return selectedDownloadAlbum ? selectedDownloadAlbum.tracks : downloadedAlbums;
-      }
-      return downloads;
+    if (activeTab !== "downloads") return [];
+    if (mode === "AUDIOBOOK") {
+      return selectedDownloadAlbum
+        ? selectedDownloadAlbum.tracks
+        : downloadedAlbums;
+    }
+    return downloads;
   }
 
   // Helper to determine data to show
@@ -451,10 +511,12 @@ export default function PersonalScreen() {
     if (activeTab === "favorites") return favorites;
     if (activeTab === "history") return history;
     if (activeTab === "downloads") {
-         if (mode === "AUDIOBOOK") {
-             return selectedDownloadAlbum ? selectedDownloadAlbum.tracks : downloadedAlbums;
-         }
-         return downloads;
+      if (mode === "AUDIOBOOK") {
+        return selectedDownloadAlbum
+          ? selectedDownloadAlbum.tracks
+          : downloadedAlbums;
+      }
+      return downloads;
     }
     return [];
   };
@@ -468,14 +530,31 @@ export default function PersonalScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.iconBtn}>
+        <TouchableOpacity
+          onPress={() => setMenuVisible(true)}
+          style={styles.iconBtn}
+        >
           <Ionicons name="add" size={28} color={colors.text} />
         </TouchableOpacity>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity onPress={() => setServerModalVisible(true)} style={[styles.iconBtn, { marginRight: 10 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {progress > 0 && (
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              style={[styles.iconBtn, { marginRight: 10 }]}
+            >
+              <Ionicons name="download-outline" size={22} color={colors.text} />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => setServerModalVisible(true)}
+            style={[styles.iconBtn, { marginRight: 10 }]}
+          >
             <Ionicons name="server-outline" size={22} color={colors.text} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push("/settings")} style={styles.iconBtn}>
+          <TouchableOpacity
+            onPress={() => router.push("/settings")}
+            style={styles.iconBtn}
+          >
             <Ionicons name="settings-outline" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
@@ -504,14 +583,20 @@ export default function PersonalScreen() {
             key={tab.key}
             style={[
               styles.tabItem,
-              activeTab === tab.key && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
+              activeTab === tab.key && {
+                borderBottomColor: colors.primary,
+                borderBottomWidth: 2,
+              },
             ]}
             onPress={() => setActiveTab(tab.key as TabType)}
           >
             <Text
               style={[
                 styles.tabText,
-                { color: activeTab === tab.key ? colors.primary : colors.secondary },
+                {
+                  color:
+                    activeTab === tab.key ? colors.primary : colors.secondary,
+                },
                 activeTab === tab.key && { fontWeight: "bold" },
               ]}
             >
@@ -522,55 +607,60 @@ export default function PersonalScreen() {
       </View>
 
       {/* Sub-tabs for MUSIC mode */}
-      {mode === "MUSIC" && (activeTab === "favorites" || activeTab === "history") && (
-        <View style={styles.subTabContainer}>
-          {[
-            { id: "album", label: "专辑" },
-            { id: "track", label: "单曲" },
-          ].map((sub) => (
-            <TouchableOpacity
-              key={sub.id}
-              style={[
-                styles.subTabItem,
-                activeSubTab === sub.id && {
-                  backgroundColor: "rgba(150,150,150,0.1)",
-                },
-              ]}
-              onPress={() => setActiveSubTab(sub.id as SubTabType)}
-            >
-              <Text
+      {mode === "MUSIC" &&
+        (activeTab === "favorites" || activeTab === "history") && (
+          <View style={styles.subTabContainer}>
+            {[
+              { id: "album", label: "专辑" },
+              { id: "track", label: "单曲" },
+            ].map((sub) => (
+              <TouchableOpacity
+                key={sub.id}
                 style={[
-                  styles.subTabText,
-                  {
-                    color:
-                      activeSubTab === sub.id
-                        ? colors.primary
-                        : colors.secondary,
+                  styles.subTabItem,
+                  activeSubTab === sub.id && {
+                    backgroundColor: "rgba(150,150,150,0.1)",
                   },
-                  activeSubTab === sub.id && { fontWeight: "bold" },
                 ]}
+                onPress={() => setActiveSubTab(sub.id as SubTabType)}
               >
-                {sub.label}
+                <Text
+                  style={[
+                    styles.subTabText,
+                    {
+                      color:
+                        activeSubTab === sub.id
+                          ? colors.primary
+                          : colors.secondary,
+                    },
+                    activeSubTab === sub.id && { fontWeight: "bold" },
+                  ]}
+                >
+                  {sub.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+      {/* Back Button for Audiobook Downloads */}
+      {activeTab === "downloads" &&
+        mode === "AUDIOBOOK" &&
+        selectedDownloadAlbum && (
+          <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
+            <TouchableOpacity
+              style={{ flexDirection: "row", alignItems: "center" }}
+              onPress={() => setSelectedDownloadAlbum(null)}
+            >
+              <Ionicons name="arrow-back" size={20} color={colors.primary} />
+              <Text
+                style={{ marginLeft: 5, color: colors.primary, fontSize: 16 }}
+              >
+                返回 {selectedDownloadAlbum.name}
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      )}
-      
-      {/* Back Button for Audiobook Downloads */}
-      {activeTab === "downloads" && mode === "AUDIOBOOK" && selectedDownloadAlbum && (
-           <View style={{ paddingHorizontal: 20, paddingVertical: 10 }}>
-               <TouchableOpacity 
-                  style={{ flexDirection: 'row', alignItems: 'center' }}
-                  onPress={() => setSelectedDownloadAlbum(null)}
-                >
-                   <Ionicons name="arrow-back" size={20} color={colors.primary} />
-                   <Text style={{ marginLeft: 5, color: colors.primary, fontSize: 16 }}>
-                       返回 {selectedDownloadAlbum.name}
-                   </Text>
-               </TouchableOpacity>
-           </View>
-      )}
+          </View>
+        )}
 
       {/* List Content */}
       {loading ? (
@@ -581,15 +671,21 @@ export default function PersonalScreen() {
         <FlatList
           data={getListData()}
           renderItem={renderItem}
-          keyExtractor={(item) => (item.id || item.name).toString() + (item.type || "")} // item.id might be duplicated if same album in multiple contexts? Or safe.
+          keyExtractor={(item) =>
+            (item.id || item.name).toString() + (item.type || "")
+          } // item.id might be duplicated if same album in multiple contexts? Or safe.
           contentContainerStyle={{ paddingBottom: 20 }}
           ListEmptyComponent={
             <View style={styles.center}>
-              <Text style={{ color: colors.secondary, marginTop: 40 }}>暂无数据</Text>
+              <Text style={{ color: colors.secondary, marginTop: 40 }}>
+                暂无数据
+              </Text>
             </View>
           }
         />
       )}
+
+      <UpdateModal visible={isModalVisible} progress={progress} onBackground={() => setModalVisible(false)} />
 
       <Modal
         visible={createModalVisible}
@@ -598,16 +694,23 @@ export default function PersonalScreen() {
         onRequestClose={() => setCreateModalVisible(false)}
       >
         <View style={styles.createModalOverlay}>
-          <View style={[styles.createModalContent, { backgroundColor: colors.card }]}>
-            <Text style={[styles.createModalTitle, { color: colors.text }]}>新建播放列表</Text>
+          <View
+            style={[
+              styles.createModalContent,
+              { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={[styles.createModalTitle, { color: colors.text }]}>
+              新建播放列表
+            </Text>
             <TextInput
               style={[
                 styles.createInput,
-                { 
-                  color: colors.text, 
+                {
+                  color: colors.text,
                   borderColor: colors.border,
-                  backgroundColor: colors.background 
-                }
+                  backgroundColor: colors.background,
+                },
               ]}
               placeholder="请输入列表名称"
               placeholderTextColor={colors.secondary}
@@ -616,8 +719,8 @@ export default function PersonalScreen() {
               autoFocus
             />
             <View style={styles.createModalButtons}>
-              <TouchableOpacity 
-                style={styles.createCancelBtn} 
+              <TouchableOpacity
+                style={styles.createCancelBtn}
                 onPress={() => {
                   setCreateModalVisible(false);
                   setNewPlaylistName("");
@@ -625,15 +728,26 @@ export default function PersonalScreen() {
               >
                 <Text style={{ color: colors.secondary }}>取消</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.createConfirmBtn, { backgroundColor: colors.primary }]} 
+              <TouchableOpacity
+                style={[
+                  styles.createConfirmBtn,
+                  { backgroundColor: colors.primary },
+                ]}
                 onPress={handleCreatePlaylist}
                 disabled={creating || !newPlaylistName.trim()}
               >
                 {creating ? (
-                  <ActivityIndicator size="small" color={theme === 'dark' ? '#000' : '#fff'} />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme === "dark" ? "#000" : "#fff"}
+                  />
                 ) : (
-                  <Text style={[styles.createConfirmText, { color: theme === 'dark' ? '#000' : '#fff' }]}>
+                  <Text
+                    style={[
+                      styles.createConfirmText,
+                      { color: theme === "dark" ? "#000" : "#fff" },
+                    ]}
+                  >
                     确定
                   </Text>
                 )}
@@ -650,39 +764,54 @@ export default function PersonalScreen() {
         animationType="fade"
         onRequestClose={() => setMenuVisible(false)}
       >
-        <TouchableOpacity 
-            style={styles.menuOverlay} 
-            activeOpacity={1} 
-            onPress={() => setMenuVisible(false)}
+        <TouchableOpacity
+          style={styles.menuOverlay}
+          activeOpacity={1}
+          onPress={() => setMenuVisible(false)}
         >
-            <View style={[styles.menuContent, { backgroundColor: colors.card, top: insets.top + 50 }]}>
-                <TouchableOpacity 
-                    style={styles.menuItem} 
-                    onPress={() => {
-                        setMenuVisible(false);
-                        setCreateModalVisible(true);
-                    }}
-                >
-                    <Ionicons name="list-outline" size={22} color={colors.text} />
-                    <Text style={[styles.menuItemText, { color: colors.text }]}>新建播放列表</Text>
-                </TouchableOpacity>
-                <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-                <TouchableOpacity 
-                    style={styles.menuItem} 
-                    onPress={() => handleUpdateLibrary("incremental")}
-                >
-                    <Ionicons name="refresh-outline" size={22} color={colors.text} />
-                    <Text style={[styles.menuItemText, { color: colors.text }]}>增量更新音频文件</Text>
-                </TouchableOpacity>
-                <View style={[styles.menuDivider, { backgroundColor: colors.border }]} />
-                <TouchableOpacity 
-                    style={styles.menuItem} 
-                    onPress={() => handleUpdateLibrary("full")}
-                >
-                    <Ionicons name="repeat-outline" size={22} color={colors.text} />
-                    <Text style={[styles.menuItemText, { color: colors.text }]}>全量更新音频文件</Text>
-                </TouchableOpacity>
-            </View>
+          <View
+            style={[
+              styles.menuContent,
+              { backgroundColor: colors.card, top: insets.top + 50 },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                setCreateModalVisible(true);
+              }}
+            >
+              <Ionicons name="list-outline" size={22} color={colors.text} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                新建播放列表
+              </Text>
+            </TouchableOpacity>
+            <View
+              style={[styles.menuDivider, { backgroundColor: colors.border }]}
+            />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleUpdateLibrary("incremental")}
+            >
+              <Ionicons name="refresh-outline" size={22} color={colors.text} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                增量更新音频文件
+              </Text>
+            </TouchableOpacity>
+            <View
+              style={[styles.menuDivider, { backgroundColor: colors.border }]}
+            />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleUpdateLibrary("full")}
+            >
+              <Ionicons name="repeat-outline" size={22} color={colors.text} />
+              <Text style={[styles.menuItemText, { color: colors.text }]}>
+                全量更新音频文件
+              </Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </Modal>
 
@@ -693,55 +822,86 @@ export default function PersonalScreen() {
         animationType="fade"
       >
         <View style={styles.importModalOverlay}>
-            <View style={[styles.importModalContent, { backgroundColor: colors.card }]}>
-                <Text style={[styles.importModalTitle, { color: colors.text }]}>数据入库进度</Text>
-                
-                <View style={styles.importStatusRow}>
-                    <Text style={{ color: colors.secondary }}>状态：</Text>
-                    <Text style={{ color: colors.text, fontWeight: '500' }}>
-                        {importTask?.status === TaskStatus.INITIALIZING ? '正在初始化...' : 
-                        importTask?.status === TaskStatus.PARSING ? '正在解析媒体文件...' :
-                        importTask?.status === TaskStatus.SUCCESS ? '入库完成' :
-                        importTask?.status === TaskStatus.FAILED ? '入库失败' : '准备中'}
-                    </Text>
-                </View>
+          <View
+            style={[
+              styles.importModalContent,
+              { backgroundColor: colors.card },
+            ]}
+          >
+            <Text style={[styles.importModalTitle, { color: colors.text }]}>
+              数据入库进度
+            </Text>
 
-                {importTask?.status === TaskStatus.FAILED && (
-                    <Text style={[styles.importErrorText, { color: colors.primary }]}>
-                        错误：{importTask.message}
-                    </Text>
-                )}
-
-                <View style={[styles.progressBarContainer, { backgroundColor: colors.background }]}>
-                    <View style={[
-                        styles.progressBarFill, 
-                        { 
-                            backgroundColor: colors.primary,
-                            width: `${importTask?.total ? Math.round((importTask.current || 0) / importTask.total * 100) : 0}%` 
-                        }
-                    ]} />
-                </View>
-
-                <Text style={[styles.importCounts, { color: colors.secondary }]}>
-                    共检测到 {importTask?.total || 0} 个音频文件，已经入库 {importTask?.current || 0} 个
-                </Text>
-
-                {(importTask?.status === TaskStatus.SUCCESS || importTask?.status === TaskStatus.FAILED) ? (
-                    <TouchableOpacity 
-                        style={[styles.importCloseBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => setImportModalVisible(false)}
-                    >
-                        <Text style={[styles.importCloseBtnText, { color: theme === 'dark' ? '#000' : '#fff' }]}>关闭</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity 
-                        style={styles.importHideBtn}
-                        onPress={() => setImportModalVisible(false)}
-                    >
-                        <Text style={{ color: colors.secondary }}>后台运行</Text>
-                    </TouchableOpacity>
-                )}
+            <View style={styles.importStatusRow}>
+              <Text style={{ color: colors.secondary }}>状态：</Text>
+              <Text style={{ color: colors.text, fontWeight: "500" }}>
+                {importTask?.status === TaskStatus.INITIALIZING
+                  ? "正在初始化..."
+                  : importTask?.status === TaskStatus.PARSING
+                    ? "正在解析媒体文件..."
+                    : importTask?.status === TaskStatus.SUCCESS
+                      ? "入库完成"
+                      : importTask?.status === TaskStatus.FAILED
+                        ? "入库失败"
+                        : "准备中"}
+              </Text>
             </View>
+
+            {importTask?.status === TaskStatus.FAILED && (
+              <Text style={[styles.importErrorText, { color: colors.primary }]}>
+                错误：{importTask.message}
+              </Text>
+            )}
+
+            <View
+              style={[
+                styles.progressBarContainer,
+                { backgroundColor: colors.background },
+              ]}
+            >
+              <View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    backgroundColor: colors.primary,
+                    width: `${importTask?.total ? Math.round(((importTask.current || 0) / importTask.total) * 100) : 0}%`,
+                  },
+                ]}
+              />
+            </View>
+
+            <Text style={[styles.importCounts, { color: colors.secondary }]}>
+              共检测到 {importTask?.total || 0} 个音频文件，已经入库{" "}
+              {importTask?.current || 0} 个
+            </Text>
+
+            {importTask?.status === TaskStatus.SUCCESS ||
+            importTask?.status === TaskStatus.FAILED ? (
+              <TouchableOpacity
+                style={[
+                  styles.importCloseBtn,
+                  { backgroundColor: colors.primary },
+                ]}
+                onPress={() => setImportModalVisible(false)}
+              >
+                <Text
+                  style={[
+                    styles.importCloseBtnText,
+                    { color: theme === "dark" ? "#000" : "#fff" },
+                  ]}
+                >
+                  关闭
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.importHideBtn}
+                onPress={() => setImportModalVisible(false)}
+              >
+                <Text style={{ color: colors.secondary }}>后台运行</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </Modal>
 
@@ -752,44 +912,69 @@ export default function PersonalScreen() {
         animationType="fade"
         onRequestClose={() => setServerModalVisible(false)}
       >
-        <TouchableOpacity 
-            style={styles.importModalOverlay} 
-            activeOpacity={1} 
-            onPress={() => setServerModalVisible(false)}
+        <TouchableOpacity
+          style={styles.importModalOverlay}
+          activeOpacity={1}
+          onPress={() => setServerModalVisible(false)}
         >
-            <View style={[styles.importModalContent, { backgroundColor: colors.card }]}>
-                <Text style={[styles.importModalTitle, { color: colors.text, textAlign: 'center' }]}>切换服务端</Text>
-                <FlatList
-                    data={serverHistory}
-                    keyExtractor={(item) => item.value}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity 
-                            style={[
-                                styles.serverItem, 
-                                { borderBottomColor: colors.border },
-                                getBaseURL() === item.value && { backgroundColor: 'rgba(150,150,150,0.1)' }
-                            ]}
-                            onPress={async () => {
-                                await switchServer(item.value);
-                                setServerModalVisible(false);
-                            }}
-                        >
-                            <View style={{ flex: 1 }}>
-                                <Text style={[
-                                    styles.serverItemText, 
-                                    { color: getBaseURL() === item.value ? colors.primary : colors.text }
-                                ]}>
-                                    {item.label}
-                                </Text>
-                            </View>
-                            {getBaseURL() === item.value && (
-                                <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                            )}
-                        </TouchableOpacity>
-                    )}
-                    style={{ maxHeight: 300 }}
-                />
-            </View>
+          <View
+            style={[
+              styles.importModalContent,
+              { backgroundColor: colors.card },
+            ]}
+          >
+            <Text
+              style={[
+                styles.importModalTitle,
+                { color: colors.text, textAlign: "center" },
+              ]}
+            >
+              切换服务端
+            </Text>
+            <FlatList
+              data={serverHistory}
+              keyExtractor={(item) => item.value}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.serverItem,
+                    { borderBottomColor: colors.border },
+                    getBaseURL() === item.value && {
+                      backgroundColor: "rgba(150,150,150,0.1)",
+                    },
+                  ]}
+                  onPress={async () => {
+                    await switchServer(item.value);
+                    setServerModalVisible(false);
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.serverItemText,
+                        {
+                          color:
+                            getBaseURL() === item.value
+                              ? colors.primary
+                              : colors.text,
+                        },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
+                  {getBaseURL() === item.value && (
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={20}
+                      color={colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              style={{ maxHeight: 300 }}
+            />
+          </View>
         </TouchableOpacity>
       </Modal>
     </View>
@@ -992,10 +1177,10 @@ const styles = StyleSheet.create({
   },
   menuOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   menuContent: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
     borderRadius: 12,
     paddingVertical: 8,
@@ -1008,18 +1193,18 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      gap: 12
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   menuItemText: {
-      fontSize: 16
+    fontSize: 16,
   },
   menuDivider: {
-      height: 1,
-      width: '100%'
+    height: 1,
+    width: "100%",
   },
   importModalOverlay: {
     flex: 1,
@@ -1038,7 +1223,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   importStatusRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 10,
   },
   importErrorText: {
@@ -1047,12 +1232,12 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     height: 6,
     borderRadius: 3,
-    width: '100%',
-    overflow: 'hidden',
+    width: "100%",
+    overflow: "hidden",
     marginBottom: 15,
   },
   progressBarFill: {
-    height: '100%',
+    height: "100%",
   },
   importCounts: {
     fontSize: 12,
@@ -1061,19 +1246,19 @@ const styles = StyleSheet.create({
   importCloseBtn: {
     paddingVertical: 12,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   importCloseBtnText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   importHideBtn: {
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   serverItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 15,
     paddingHorizontal: 10,
     borderBottomWidth: 0.5,
