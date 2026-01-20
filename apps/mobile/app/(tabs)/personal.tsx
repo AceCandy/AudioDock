@@ -110,6 +110,41 @@ export default function PersonalScreen() {
     { label: string; value: string }[]
   >([]);
 
+  const handleDeleteServer = async (address: string) => {
+    Alert.alert("删除数据源", `确定要删除数据源 ${address} 吗？`, [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const history = await AsyncStorage.getItem("serverHistory");
+            if (history) {
+              const parsed = JSON.parse(history);
+              const filtered = parsed.filter((item: any) => item.value !== address);
+              await AsyncStorage.setItem("serverHistory", JSON.stringify(filtered));
+              setServerHistory(filtered);
+
+              // Also clear associated data
+              await AsyncStorage.removeItem(`token_${address}`);
+              await AsyncStorage.removeItem(`user_${address}`);
+              await AsyncStorage.removeItem(`device_${address}`);
+              await AsyncStorage.removeItem(`creds_${address}`);
+
+              if (getBaseURL() === address) {
+                // If it was current, reset to default or first available
+                const nextUrl = filtered.length > 0 ? filtered[0].value : "http://localhost:3000";
+                await switchServer(nextUrl);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to delete server", e);
+          }
+        },
+      },
+    ]);
+  };
+
   const loadServerHistory = useCallback(async () => {
     const history = await AsyncStorage.getItem("serverHistory");
     if (history) {
@@ -935,42 +970,58 @@ export default function PersonalScreen() {
               data={serverHistory}
               keyExtractor={(item) => item.value}
               renderItem={({ item }) => (
-                <TouchableOpacity
+                <View
                   style={[
                     styles.serverItem,
                     { borderBottomColor: colors.border },
-                    getBaseURL() === item.value && {
-                      backgroundColor: "rgba(150,150,150,0.1)",
-                    },
                   ]}
-                  onPress={async () => {
-                    await switchServer(item.value);
-                    setServerModalVisible(false);
-                  }}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={[
-                        styles.serverItemText,
-                        {
-                          color:
-                            getBaseURL() === item.value
-                              ? colors.primary
-                              : colors.text,
-                        },
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                  </View>
-                  {getBaseURL() === item.value && (
+                  <TouchableOpacity
+                    style={[
+                      { flex: 1, paddingVertical: 15, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center' },
+                      getBaseURL() === item.value && {
+                        backgroundColor: "rgba(150,150,150,0.1)",
+                      },
+                    ]}
+                    onPress={async () => {
+                      await switchServer(item.value);
+                      setServerModalVisible(false);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text
+                        style={[
+                          styles.serverItemText,
+                          {
+                            color:
+                              getBaseURL() === item.value
+                                ? colors.primary
+                                : colors.text,
+                          },
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
+                    {getBaseURL() === item.value && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ padding: 5 }}
+                    onPress={() => handleDeleteServer(item.value)}
+                  >
                     <Ionicons
-                      name="checkmark-circle"
+                      name="trash-outline"
                       size={20}
-                      color={colors.primary}
+                      color={colors.secondary}
                     />
-                  )}
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
               )}
               style={{ maxHeight: 300 }}
             />
@@ -1259,8 +1310,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 5,
     borderBottomWidth: 0.5,
     borderRadius: 8,
   },

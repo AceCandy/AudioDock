@@ -138,6 +138,24 @@ export default function LoginScreen() {
     }
   };
 
+  const handleDeleteHistory = async (address: string) => {
+    try {
+      const currentHistory = await AsyncStorage.getItem("serverHistory");
+      if (currentHistory) {
+        let history = JSON.parse(currentHistory);
+        history = history.filter((item: any) => item.value !== address);
+        await AsyncStorage.setItem("serverHistory", JSON.stringify(history));
+        setItems(history);
+        if (serverAddress === address) {
+          setServerAddress("");
+          setStatusMessage("error");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to delete history:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!serverAddress) {
       Alert.alert("Error", "Please enter server address");
@@ -210,10 +228,13 @@ export default function LoginScreen() {
                     setItems={setItems}
                     searchable={true}
                     searchPlaceholder="输入数据源地址..."
+                    searchTextInputProps={{
+                      autoCapitalize: "none",
+                    }}
                     placeholder="选择或输入数据源地址"
                     addCustomItem={true}
                     onChangeValue={(value) => {
-                      if (value) checkServerConnectivity(value);
+                      if (value) checkServerConnectivity(value as string);
                     }}
                     theme={colors.background === '#000000' ? "DARK" : "LIGHT"}
                     style={{
@@ -231,12 +252,68 @@ export default function LoginScreen() {
                       color: colors.secondary,
                     }}
                     listMode="SCROLLVIEW"
+                    onSelectItem={(item) => {
+                      if (item.value) {
+                        checkServerConnectivity(item.value as string);
+                      }
+                    }}
+                    renderListItem={({ item, isSelected }) => {
+                      // Only show delete button for items that are in our saved history
+                      const isPersistent = items.some(i => i.value === item.value);
+
+                      return (
+                        <View 
+                          style={{ 
+                            flexDirection: 'row', 
+                            alignItems: 'center', 
+                            padding: 10,
+                            borderBottomWidth: 0.5,
+                            borderBottomColor: colors.border,
+                            backgroundColor: isSelected ? 'rgba(150,150,150,0.1)' : 'transparent'
+                          }}
+                        >
+                          <TouchableOpacity 
+                            style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+                            onPress={() => {
+                              // Perform the selection logic
+                              const value = item.value as string;
+                              if (value) {
+                                setServerAddress(value);
+                                checkServerConnectivity(value);
+                                
+                                // For custom items (not in history), save them
+                                if (!isPersistent) {
+                                  saveToHistory(value);
+                                }
+                              }
+                              
+                              // Call library's onPress to handle internal state
+                              // onPress(value as any);
+                              setOpen(false);
+                            }}
+                          >
+                            <Text style={{ color: colors.text, flex: 1 }}>{item.label}</Text>
+                            {isSelected && (
+                              <FontAwesome name="check-circle" size={16} color={colors.primary} />
+                            )}
+                          </TouchableOpacity>
+                          {isPersistent && !item.parent && (
+                            <TouchableOpacity 
+                              style={{ padding: 5, marginLeft: 10 }}
+                              onPress={() => handleDeleteHistory(item.value as string)}
+                            >
+                              <MaterialIcons name="delete-outline" size={20} color={colors.secondary} />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    }}
                   />
                 </View>
                 {statusMessage === "error" ?  (
                   <MaterialIcons style={styles.statusMessage} name="error" size={24} color="red" />
                 ) : (
-                  <FontAwesome style={styles.statusMessage} name="check-circle" size={24} color="#4CAF50" />
+                  <FontAwesome style={styles.statusMessage} name="check-circle" size={24} color={colors.primary} />
                 )}
               </View>
 
