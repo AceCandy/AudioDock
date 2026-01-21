@@ -3,19 +3,19 @@ import { SubsonicAlbum, SubsonicArtist, SubsonicChild } from "./types";
 
 export const mapSubsonicSongToTrack = (song: SubsonicChild, coverUrlBuilder: (id: string) => string): Track => {
   return {
-    id: parseInt(song.id) || 0, // Potential issue if ID is not numeric
+    id: song.id || 0,
     name: song.title,
     path: song.path || "",
     artist: song.artist || "Unknown Artist",
     artistEntity: {
-        id: parseInt(song.artistId || "0") || 0,
+        id: song.artistId as string,
         name: song.artist || "Unknown Artist",
         avatar: null,
         type: TrackType.MUSIC
     },
     album: song.album || "Unknown Album",
     albumEntity: {
-        id: parseInt(song.albumId || "0") || 0,
+        id: song.albumId as string,
         name: song.album || "Unknown Album",
         artist: song.artist || "Unknown Artist",
         cover: song.coverArt ? coverUrlBuilder(song.coverArt) : null,
@@ -43,7 +43,7 @@ export const mapSubsonicSongToTrack = (song: SubsonicChild, coverUrlBuilder: (id
 
 export const mapSubsonicAlbumToAlbum = (album: SubsonicAlbum, coverUrlBuilder: (id: string) => string): Album => {
     return {
-        id: parseInt(album.id) || 0,
+        id: album.id,
         name: album.name,
         artist: album.artist,
         cover: album.coverArt ? coverUrlBuilder(album.coverArt) : null,
@@ -60,7 +60,7 @@ export const mapSubsonicAlbumToAlbum = (album: SubsonicAlbum, coverUrlBuilder: (
 
 export const mapSubsonicArtistToArtist = (artist: SubsonicArtist, coverUrlBuilder: (id: string) => string): Artist => {
     return {
-        id: parseInt(artist.id) || 0,
+        id: artist.id,
         name: artist.name,
         avatar: artist.coverArt ? coverUrlBuilder(artist.coverArt) : null,
         type: TrackType.MUSIC,

@@ -1,6 +1,6 @@
 import type {
-    Album,
-    ISuccessResponse
+  Album,
+  ISuccessResponse
 } from "../../models";
 import { IAlbumAdapter } from "../interface";
 import { SubsonicClient } from "./client";
@@ -46,15 +46,15 @@ export class SubsonicAlbumAdapter implements IAlbumAdapter {
     loadCount: number;
     type?: string;
   }) {
-    const offset = params.loadCount; // Assuming loadCount is total items loaded so far? Or offset?
-    const res = await this.client.get<SubsonicAlbumList>("getAlbumList2", { type: params.type || "newest", size: params.pageSize, offset });
+    const offset = 0; // Assuming loadCount is total items loaded so far? Or offset?
+    const res = await this.client.get<SubsonicAlbumList>("getAlbumList2", { type: "newest", size: 1000000, offset });
     const list = (res.albumList?.album || []).map(a => mapSubsonicAlbumToAlbum(a, (id) => this.client.getCoverUrl(id)));
     
     return this.response({
         pageSize: params.pageSize,
         loadCount: params.loadCount + list.length,
         list,
-        total: 1000,
+        total: list.length,
         hasMore: list.length === params.pageSize
     });
   }

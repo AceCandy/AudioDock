@@ -13,6 +13,6 @@ export const useNativeAdapter = () => {
   currentAdapter = new NativeMusicAdapter();
 };
 
-export const useSubsonicAdapter = (config: SubsonicConfig) => {
+export const useSubsonicAdapter = (config?: SubsonicConfig) => {
   currentAdapter = new SubsonicMusicAdapter(config);
 };

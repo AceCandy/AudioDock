@@ -10,8 +10,8 @@ import { useParams } from "react-router-dom";
 import Cover from "../../components/Cover";
 import TrackList from "../../components/TrackList";
 import { useMessage } from "../../context/MessageContext";
+import { getBaseURL } from "../../https";
 import { type Album, type Artist, type Track, TrackType } from "../../models";
-import { getCoverUrl } from "../../utils";
 import { usePlayMode } from "../../utils/playMode";
 import styles from "./index.module.less";
 
@@ -32,7 +32,7 @@ const ArtistDetail: React.FC = () => {
       if (!id) return;
       setLoading(true);
       try {
-        const artistRes = await getArtistById(parseInt(id));
+        const artistRes = await getArtistById(id as unknown as number);
         if (artistRes.code === 200 && artistRes.data) {
           setArtist(artistRes.data);
           // Fetch albums using artist name
@@ -111,7 +111,13 @@ const ArtistDetail: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <Avatar
-          src={getCoverUrl(artist, artist.id)}
+          src={
+            artist?.avatar
+              ? artist.avatar.startsWith("http")
+                ? artist.avatar
+                : `${getBaseURL()}${artist.avatar}`
+              : undefined
+          }
           size={200}
           shape="circle"
           className={styles.avatar}

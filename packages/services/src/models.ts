@@ -44,7 +44,7 @@ export interface TimelineItem {
 // Prisma Models
 
 export interface Track {
-  id: number;
+  id: number | string;
   name: string;
   path: string;
   artist: string;
@@ -69,7 +69,7 @@ export interface Track {
 }
 
 export interface Album {
-  id: number;
+  id: number | string;
   name: string;
   artist: string;
   cover: string | null;
@@ -83,7 +83,7 @@ export interface Album {
 }
 
 export interface Artist {
-  id: number;
+  id: number | string;
   name: string;
   avatar: string | null;
   type: TrackType;
@@ -92,7 +92,7 @@ export interface Artist {
 }
 
 export interface UserTrackLike {
-  id: number;
+  id: number | string;
   userId: number;
   trackId: number;
   createdAt: string | Date;
@@ -101,7 +101,7 @@ export interface UserTrackLike {
 }
 
 export interface UserTrackHistory {
-  id: number;
+  id: number | string;
   userId: number;
   trackId: number;
   listenedAt: string | Date;
@@ -110,7 +110,7 @@ export interface UserTrackHistory {
 }
 
 export interface UserAlbumLike {
-  id: number;
+  id: number | string;
   userId: number;
   albumId: number;
   createdAt: string | Date;
@@ -119,7 +119,7 @@ export interface UserAlbumLike {
 }
 
 export interface UserAlbumHistory {
-  id: number;
+  id: number | string;
   userId: number;
   albumId: number;
   listenedAt: string | Date;
@@ -128,7 +128,7 @@ export interface UserAlbumHistory {
 }
 
 export interface UserAudiobookLike {
-  id: number;
+  id: number | string;
   userId: number;
   trackId: number;
   createdAt: string | Date;
@@ -137,7 +137,7 @@ export interface UserAudiobookLike {
 }
 
 export interface UserAudiobookHistory {
-  id: number;
+  id: number | string;
   userId: number;
   trackId: number;
   listenedAt: string | Date;

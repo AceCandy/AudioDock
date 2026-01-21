@@ -1,9 +1,9 @@
+import { loadMoreAlbum } from "@soundx/services";
 import { useInfiniteScroll } from "ahooks";
 import { Col, Row, theme } from "antd";
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 import Cover from "../../components/Cover/index";
 import type { Album } from "../../models";
-import { loadMoreAlbum } from "@soundx/services";
 import { useAlbumListCache } from "../../store/category";
 import { usePlayMode } from "../../utils/playMode";
 import styles from "./index.module.less";
@@ -64,6 +64,8 @@ const Category: React.FC = () => {
       manual: true,
     }
   );
+
+  console.log("data", data);
 
   // Restore cache or reload
   useLayoutEffect(() => {

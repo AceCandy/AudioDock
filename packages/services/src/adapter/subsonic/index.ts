@@ -13,7 +13,7 @@ export class SubsonicMusicAdapter implements IMusicAdapter {
   auth: SubsonicAuthAdapter;
   client: SubsonicClient;
 
-  constructor(config: SubsonicConfig) {
+  constructor(config?: SubsonicConfig) {
       this.client = new SubsonicClient(config);
       this.track = new SubsonicTrackAdapter(this.client);
       this.album = new SubsonicAlbumAdapter(this.client);

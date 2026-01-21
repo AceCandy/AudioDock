@@ -145,7 +145,9 @@ const ArtistList: React.FC = () => {
                   <Avatar
                     src={
                       artist.avatar
-                        ? `${getBaseURL()}${artist.avatar}`
+                        ? artist.avatar.startsWith("http")
+                          ? artist.avatar
+                          : `${getBaseURL()}${artist.avatar}`
                         : `https://picsum.photos/seed/${artist.id}/300/300`
                     }
                     size={120}

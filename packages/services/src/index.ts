@@ -8,14 +8,16 @@ export * from "./playlist";
 export * from "./request";
 export * from "./search";
 
+export * from "./adapter/manager";
 export * from "./admin";
+export * from "./config";
 export * from "./search-record";
 export * from "./track";
 export * from "./user";
 export * from "./userAudiobookHistory";
 
 export const SOURCEMAP = {
+    AudioDock: "audiodock",
     Navidrome: "subsonic",
     AudioServe: "subsonic",
-    AudioDock: "audiodock",
 }

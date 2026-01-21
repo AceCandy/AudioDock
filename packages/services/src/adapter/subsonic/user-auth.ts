@@ -1,3 +1,4 @@
+import { getServiceConfig } from "../../config";
 import { ISuccessResponse, User } from "../../models";
 import { IAuthAdapter, IUserAdapter } from "../interface-user-auth";
 import { SubsonicClient } from "./client";
@@ -106,10 +107,11 @@ export class SubsonicAuthAdapter implements IAuthAdapter {
        const ping = await this.client.get<{ status: string, version: string }>("ping");
        if (!ping) throw new Error("Connection failed");
        
+       const config = getServiceConfig();
        // Try to get real user info if username is provided in config
        // Note: Subsonic getUser requires username, which we have in config
        try {
-         const userRes = await this.client.get<{ user: { username: string, email?: string, adminRole?: boolean } }>("getUser", { username: (user as any).username || this.client.config.username });
+         const userRes = await this.client.get<{ user: { username: string, email?: string, adminRole?: boolean } }>("getUser", { username: (user as any).username || config.username });
          return this.response({
              id: 1, // Subsonic doesn't really allow numeric ID retrieval for users easily, use dummy
              username: userRes.user.username,
@@ -122,7 +124,7 @@ export class SubsonicAuthAdapter implements IAuthAdapter {
          // Fallback if getUser fails (e.g. permissions)
            return this.response({
              id: 1,
-             username: this.client.config.username,
+             username: config.username,
              is_admin: false,
              token: "subsonic-session-token", 
              device: { id: 1, name: deviceName || "Subsonic Device", userId: 1, isOnline: true, createdAt: new Date(), updatedAt: new Date() }

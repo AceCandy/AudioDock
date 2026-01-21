@@ -13,6 +13,13 @@ export const getRequestInstance = () => {
   return requestInstance;
 };
 
+export const getBaseURL = () => {
+    if (requestInstance) {
+        return requestInstance.defaults.baseURL || "";
+    }
+    return "";
+};
+
 // Facade to match typical axios usage: request.get, request.post etc.
 export const request = {
   get: <T = any, R = any, D = any>(url: string, config?: any) => getRequestInstance().get<T, R, D>(url, config),

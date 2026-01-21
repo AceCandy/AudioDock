@@ -6,7 +6,15 @@ import {
   LockOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { login, register } from "@soundx/services";
+import {
+  check,
+  login,
+  register,
+  setServiceConfig,
+  SOURCEMAP,
+  useNativeAdapter,
+  useSubsonicAdapter
+} from "@soundx/services";
 import {
   AutoComplete,
   Button,
@@ -14,8 +22,9 @@ import {
   Form,
   Input,
   Modal,
-  Typography,
+  Segmented,
   theme,
+  Typography,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useMessage } from "../../context/MessageContext";
@@ -29,6 +38,9 @@ const LoginModal: React.FC = () => {
   const { token, login: setLogin } = useAuthStore();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [sourceType, setSourceType] = useState<string>(
+    () => localStorage.getItem("selectedSourceType") || "AudioDock"
+  );
   const [serverHistory, setServerHistory] = useState<{ value: string }[]>([]);
   const [rememberMe, setRememberMe] = useState(false);
   const [loginForm] = Form.useForm();
@@ -38,25 +50,33 @@ const LoginModal: React.FC = () => {
     "success" | "error" | "validating" | null
   >(null);
 
-  // Load saved history and credentials on mount
+  const getSourceHistoryKey = (type: string) => `serverHistory_${type}`;
+  const getSourceAddressKey = (type: string) => `serverAddress_${type}`;
+
+  // Load saved history and credentials when sourceType changes or on mount
   useEffect(() => {
-    const history = localStorage.getItem("serverHistory");
+    const historyKey = getSourceHistoryKey(sourceType);
+    const history = localStorage.getItem(historyKey);
     if (history) {
       setServerHistory(JSON.parse(history));
     } else {
-      setServerHistory([{ value: "http://localhost:3000" }]);
+      setServerHistory(sourceType === "AudioDock" ? [{ value: "http://localhost:3000" }] : []);
     }
 
-    const savedAddress = localStorage.getItem("serverAddress");
+    const addressKey = getSourceAddressKey(sourceType);
+    const savedAddress = localStorage.getItem(addressKey);
     if (savedAddress) {
       loginForm.setFieldsValue({ serverAddress: savedAddress });
-      checkServerConnectivity(savedAddress);
-      restoreCredentials(savedAddress);
+      // checkServerConnectivity(savedAddress, sourceType);
+      restoreCredentials(savedAddress, sourceType);
+    } else {
+      loginForm.setFieldsValue({ serverAddress: "", username: "", password: "" });
+      setServerStatus(null);
     }
-  }, [loginForm]);
+  }, [sourceType, loginForm]);
 
-  const restoreCredentials = (address: string) => {
-    const credsKey = `creds_${address}`;
+  const restoreCredentials = (address: string, type: string) => {
+    const credsKey = `creds_${type}_${address}`;
     const savedCreds = localStorage.getItem(credsKey);
     if (savedCreds) {
       const { username, password } = JSON.parse(savedCreds);
@@ -68,63 +88,98 @@ const LoginModal: React.FC = () => {
     }
   };
 
-  const saveToHistory = (address: string) => {
+  const saveToHistory = (address: string, type: string) => {
     if (!address) return;
-    const history = localStorage.getItem("serverHistory");
+    const historyKey = getSourceHistoryKey(type);
+    const history = localStorage.getItem(historyKey);
     let list = history ? JSON.parse(history) : [];
     if (!list.find((i: any) => i.value === address)) {
       list.push({ value: address });
-      localStorage.setItem("serverHistory", JSON.stringify(list));
+      localStorage.setItem(historyKey, JSON.stringify(list));
       setServerHistory(list);
     }
   };
 
-  const checkServerConnectivity = async (address: string) => {
+  const checkServerConnectivity = async (address: string, type: string, username?: string, password?: string) => {
     if (!address) return;
     if (!address.startsWith("http://") && !address.startsWith("https://"))
       return;
 
     setServerStatus("validating");
+    
+    // Configure adapter temporarily for check
+    configureAdapter(type, address, username, password);
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
 
-      const response = await fetch(
-        `${address.endsWith("/") ? address : address + "/"}hello`,
-        {
-          signal: controller.signal,
-        },
-      );
+      // Use the generic check service call which now routes to the active adapter
+      const response = await check();
       clearTimeout(timeoutId);
 
-      if (response.ok) {
-        const text = await response.text();
-        if (text.includes("hello")) {
+      if (response) {
           setServerStatus("success");
-          message.success("后端服务已连接");
+          message.success(`${type} 服务已连接`);
           return;
-        }
       }
+      // Special handling for Subsonic: if we get a response but code isn't 200, it might be auth error
+      // which still means the server is reachable and is a Subsonic server.
+      if (SOURCEMAP[type as keyof typeof SOURCEMAP] === "subsonic") {
+          setServerStatus("success");
+          return;
+      }
+
       throw new Error("Invalid response");
     } catch (error) {
       console.error("Connectivity check failed:", error);
       setServerStatus("error");
-      message.error("后端服务连接失败，请检查地址是否正确");
+      message.error(`${type} 服务连接失败，请检查地址是否正确`);
+    }
+  };
+
+  const configureAdapter = (type: string, address: string, username?: string, password?: string) => {
+    const mappedType = SOURCEMAP[type as keyof typeof SOURCEMAP] || "audiodock";
+    
+    // Set global base URL in request module (if available/exposed)
+    // In desktop project, request instance is updated via setBaseURL equivalent
+    localStorage.setItem("serverAddress", address); // This affects getBaseURL() in https/index.ts
+    
+    // Set credentials in global service config
+    setServiceConfig({
+        username,
+        password,
+        clientName: "SoundX Desktop"
+    });
+
+    if (mappedType === "subsonic") {
+        useSubsonicAdapter();
+    } else {
+        useNativeAdapter();
     }
   };
 
   const handleFinish = async (values: any) => {
     setLoading(true);
-    localStorage.setItem("serverAddress", values.serverAddress);
-    saveToHistory(values.serverAddress);
+    const type = sourceType;
+    const addressKey = getSourceAddressKey(type);
+    
+    localStorage.setItem(addressKey, values.serverAddress);
+    localStorage.setItem("selectedSourceType", type);
+    saveToHistory(values.serverAddress, type);
 
     const baseURL = values.serverAddress;
     const tokenKey = `token_${baseURL}`;
     const userKey = `user_${baseURL}`;
     const deviceKey = `device_${baseURL}`;
-    const credsKey = `creds_${baseURL}`;
+    const credsKey = `creds_${type}_${baseURL}`;
+
+    // Final adapter configuration with full credentials
+    configureAdapter(type, values.serverAddress, values.username, values.password);
 
     try {
+      checkServerConnectivity(values.serverAddress, type, values.username, values.password);
+
       if (isLogin) {
         const res = await login({
           username: values.username,
@@ -168,13 +223,20 @@ const LoginModal: React.FC = () => {
           message.success("注册成功");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      message.error(error.message || "登录失败");
     } finally {
       setLoading(false);
+      // Reload is used here to ensure all services pickup the new state correctly
       window.location.reload();
     }
   };
+
+  const sourceOptions = Object.keys(SOURCEMAP).map(key => ({
+      label: key,
+      value: key
+  }));
 
   return (
     <Modal
@@ -201,6 +263,19 @@ const LoginModal: React.FC = () => {
         >
           {isLogin ? "欢迎回来" : "创建一个新账户开始"}
         </Text>
+      </div>
+
+      <div style={{ marginBottom: 24, textAlign: 'center' }}>
+          <Segmented
+              block
+              size="large"
+              options={sourceOptions}
+              value={sourceType}
+              onChange={(val) => {
+                  setSourceType(val as string);
+                  localStorage.setItem("selectedSourceType", val as string);
+              }}
+          />
       </div>
 
       <Form
@@ -242,19 +317,19 @@ const LoginModal: React.FC = () => {
           <AutoComplete
             options={serverHistory}
             onSelect={(val) => {
-              checkServerConnectivity(val);
-              restoreCredentials(val);
+              // checkServerConnectivity(val, sourceType);
+              restoreCredentials(val, sourceType);
             }}
             onChange={(val) => {
               if (val.startsWith("http")) {
-                restoreCredentials(val);
+                restoreCredentials(val, sourceType);
               }
             }}
           >
             <Input
               prefix={<HddOutlined />}
               placeholder="请输入服务端地址"
-              onBlur={(e) => checkServerConnectivity(e.target.value)}
+              // onBlur={(e) => checkServerConnectivity(e.target.value, sourceType)}
               suffix={
                 serverStatus === "error" ? (
                   <CloseCircleOutlined />
@@ -363,34 +438,36 @@ const LoginModal: React.FC = () => {
         )}
       </Form>
 
-      <div
-        className={styles.switchText}
-        style={{ color: themeToken.colorTextSecondary }}
-      >
-        {isLogin ? (
-          <>
-            没有账号？
-            <span
-              className={styles.switchLink}
-              onClick={() => setIsLogin(false)}
-              style={{ color: themeToken.colorPrimary }}
-            >
-              注册
-            </span>
-          </>
-        ) : (
-          <>
-            已有账号？
-            <span
-              className={styles.switchLink}
-              onClick={() => setIsLogin(true)}
-              style={{ color: themeToken.colorPrimary }}
-            >
-              登陆
-            </span>
-          </>
-        )}
-      </div>
+      {sourceType === "AudioDock" && (
+          <div
+            className={styles.switchText}
+            style={{ color: themeToken.colorTextSecondary }}
+          >
+            {isLogin ? (
+              <>
+                没有账号？
+                <span
+                  className={styles.switchLink}
+                  onClick={() => setIsLogin(false)}
+                  style={{ color: themeToken.colorPrimary }}
+                >
+                  注册
+                </span>
+              </>
+            ) : (
+              <>
+                已有账号？
+                <span
+                  className={styles.switchLink}
+                  onClick={() => setIsLogin(true)}
+                  style={{ color: themeToken.colorPrimary }}
+                >
+                  登陆
+                </span>
+              </>
+            )}
+          </div>
+      )}
 
       <div
         className={styles.footer}

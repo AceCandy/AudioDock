@@ -1,4 +1,4 @@
-import { setRequestInstance } from "@soundx/services";
+import { setRequestInstance, setServiceConfig, SOURCEMAP, useNativeAdapter, useSubsonicAdapter } from "@soundx/services";
 import axios, { AxiosError, type AxiosResponse } from "axios";
 import { useAuthStore } from "../store/auth";
 
@@ -70,6 +70,32 @@ instance.interceptors.response.use(
   }
 );
 
+// --- 新增初始化逻辑 ---
+const initAdapter = () => {
+  try {
+    const sourceType = localStorage.getItem("selectedSourceType") || "AudioDock";
+    const baseURL = getBaseURL();
+    const mappedType = SOURCEMAP[sourceType as keyof typeof SOURCEMAP] || "audiodock";
+
+    // 还原账号信息
+    const credsKey = `creds_${sourceType}_${baseURL}`;
+    const savedCreds = localStorage.getItem(credsKey);
+    if (savedCreds) {
+      const { username, password } = JSON.parse(savedCreds);
+      setServiceConfig({ username, password });
+    }
+    // 还原适配器类型
+    if (mappedType === "subsonic") {
+      useSubsonicAdapter();
+    } else {
+      useNativeAdapter();
+    }
+  } catch (e) {
+    console.error("初始化适配器失败", e);
+    useNativeAdapter();
+  }
+};
+initAdapter(); // 立即执行初始化
 setRequestInstance(instance);
 
 export default instance;

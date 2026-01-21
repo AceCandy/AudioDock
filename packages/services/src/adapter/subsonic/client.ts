@@ -1,57 +1,82 @@
 import axios, { AxiosInstance } from "axios";
 import md5 from "js-md5";
+import { getServiceConfig } from "../../config";
+import { getBaseURL } from "../../request";
 
 export interface SubsonicConfig {
-    baseUrl: string;
-    username: string;
-    password?: string; // Cleartext (legacy)
-    token?: string; // Usually used for MD5 hash logic if pre-calculated, but let's stick to generating it.
-    salt?: string;
+    baseUrl?: string;
+    username?: string;
+    password?: string;
     clientName?: string;
 }
 
+export interface SubsonicResponse<T> {
+  "subsonic-response": {
+    status: "ok" | "failed";
+    version: string;
+    error?: {
+      code: number;
+      message: string;
+    };
+  } & T;
+}
+
 export class SubsonicClient {
-    public config: SubsonicConfig;
     private axios: AxiosInstance;
 
-    constructor(config: SubsonicConfig) {
-        this.config = config;
+    constructor(config?: SubsonicConfig) {
         this.axios = axios.create({
-            baseURL: config.baseUrl,
+            timeout: 30000,
         });
     }
 
     private getAuthParams() {
-        // Implementing Subsonic Token Auth (v1.13+)
+        const config = getServiceConfig();
+        const username = config.username;
+        const password = config.password || "";
+        const clientName = config.clientName || "SoundX";
+
+        if (!username) {
+            return { c: clientName, v: "1.16.1", f: "json" };
+        }
+
         const salt = Math.random().toString(36).substring(2, 15);
-        const password = this.config.password || "";
-        
-        // TS Error Fix: "This expression is not callable"
-        // Cause: Mismatch between @types/js-md5 export definition and actual CommonJS export in some contexts.
-        // Fix: Cast to any or function type to bypass TS check. 'js-md5' main export is essentially the hashing function.
-        // We use (md5 as any) to treat it as a function. 
-        // Note: We do NOT use .create() check here because the function itself has .create property, causing false positives if we just check existence.
         const token = (md5 as any)(password + salt);
 
         return {
-            u: this.config.username,
+            u: username,
             t: token,
             s: salt,
             v: "1.16.1", // Compatible version
-            c: this.config.clientName || "SoundX",
+            c: clientName,
             f: "json"
         };
     }
 
-    public getCoverUrl(id: string) {
-         const params = new URLSearchParams(this.getAuthParams() as any);
-         params.append("id", id);
-         return `${this.config.baseUrl}/rest/getCoverArt.view?${params.toString()}`;
+    private getBaseUrl(): string {
+        return getBaseURL();
+    }
+
+    private buildUrl(base: string, endpoint: string): string {
+         const cleanBase = base.replace(/\/+$/, '');
+         const cleanEndpoint = endpoint.replace(/^\/+/, '').replace(/\.view$/, '');
+         return `${cleanBase}/rest/${cleanEndpoint}.view`;
+    }
+
+    public getCoverUrl(id: string, size?: number) {
+         const auth = this.getAuthParams() as any;
+         const query = new URLSearchParams(auth);
+         query.append("id", id);
+         if (size) query.append("size", size.toString());
+         return `${this.buildUrl(this.getBaseUrl(), "getCoverArt")}?${query.toString()}`;
     }
 
     public async get<T>(endpoint: string, params: any = {}): Promise<T> {
         const authParams = this.getAuthParams();
-        const response = await this.axios.get(`/rest/${endpoint}.view`, {
+        const baseURL = this.getBaseUrl();
+        if (!baseURL) throw new Error("Base URL not set");
+
+        const response = await this.axios.get<SubsonicResponse<T>>(this.buildUrl(baseURL, endpoint), {
             params: {
                 ...authParams,
                 ...params
@@ -65,12 +90,12 @@ export class SubsonicClient {
         return data as T;
     }
     
-    // Subsonic is mostly GET, aside from playlists/starring which might be GET too.
     public async post<T>(endpoint: string, params: any = {}, body: any = {}): Promise<T> {
-         // Subsonic usually uses GET even for mutations, but supports POST.
-         // Pass params in query string for auth.
-         const authParams = this.getAuthParams();
-          const response = await this.axios.post(`/rest/${endpoint}.view`, body, {
+        const authParams = this.getAuthParams();
+        const baseURL = this.getBaseUrl();
+        if (!baseURL) throw new Error("Base URL not set");
+
+        const response = await this.axios.post<SubsonicResponse<T>>(this.buildUrl(baseURL, endpoint), body, {
             params: {
                 ...authParams,
                 ...params
