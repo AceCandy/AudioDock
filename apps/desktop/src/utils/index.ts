@@ -13,5 +13,5 @@ export const getCoverUrl = (path?: string | null | any, id?: number | string) =>
 export const isSubsonicSource = () => {
   const sourceName = localStorage.getItem("selectedSourceType") as keyof typeof SOURCEMAP;
   const sourceType = SOURCEMAP[sourceName];
-  return sourceType === SOURCEMAP.Navidrome;
+  return sourceType === SOURCEMAP.Subsonic;
 };

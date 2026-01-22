@@ -8,15 +8,15 @@ import { mapSubsonicArtistToArtist } from "./mapper";
 import { SubsonicArtistInfo, SubsonicArtistList } from "./types";
 
 export class SubsonicArtistAdapter implements IArtistAdapter {
-    constructor(private client: SubsonicClient) {}
+  constructor(private client: SubsonicClient) { }
 
-    private response<T>(data: T): ISuccessResponse<T> {
-        return {
-            code: 200,
-            message: "success",
-            data
-        };
-    }
+  private response<T>(data: T): ISuccessResponse<T> {
+    return {
+      code: 200,
+      message: "success",
+      data
+    };
+  }
 
   async getArtistList(
     pageSize: number,
@@ -27,18 +27,18 @@ export class SubsonicArtistAdapter implements IArtistAdapter {
     const res = await this.client.get<SubsonicArtistList>("getArtists");
     const allArtists: any[] = [];
     res.artists?.index?.forEach(i => {
-        if(i.artist) allArtists.push(...i.artist);
+      if (i.artist) allArtists.push(...i.artist);
     });
     // pagination
     const slice = allArtists.slice(loadCount, loadCount + pageSize);
     const list = slice.map(a => mapSubsonicArtistToArtist(a, (id) => this.client.getCoverUrl(id)));
-    
+
     return this.response({
-         pageSize,
-         loadCount: loadCount + list.length,
-         list,
-         total: allArtists.length,
-         hasMore: (loadCount + list.length) < allArtists.length
+      pageSize,
+      loadCount: loadCount + list.length,
+      list,
+      total: allArtists.length,
+      hasMore: (loadCount + list.length) < allArtists.length
     });
   }
 
@@ -46,20 +46,20 @@ export class SubsonicArtistAdapter implements IArtistAdapter {
     pageSize: number;
     current: number;
   }) {
-     const loadCount = (params.current - 1) * params.pageSize;
-     const res = await this.client.get<SubsonicArtistList>("getArtists");
-     const allArtists: any[] = [];
+    const loadCount = (params.current - 1) * params.pageSize;
+    const res = await this.client.get<SubsonicArtistList>("getArtists");
+    const allArtists: any[] = [];
     res.artists?.index?.forEach(i => {
-        if(i.artist) allArtists.push(...i.artist);
+      if (i.artist) allArtists.push(...i.artist);
     });
     const slice = allArtists.slice(loadCount, loadCount + params.pageSize);
     const list = slice.map(a => mapSubsonicArtistToArtist(a, (id) => this.client.getCoverUrl(id)));
 
     return this.response({
-        pageSize: params.pageSize,
-        current: params.current,
-        list,
-        total: allArtists.length
+      pageSize: params.pageSize,
+      current: params.current,
+      list,
+      total: allArtists.length
     });
   }
 
@@ -67,11 +67,11 @@ export class SubsonicArtistAdapter implements IArtistAdapter {
     pageSize: number;
     loadCount: number;
   }) {
-      return this.getArtistList(params.pageSize, params.loadCount);
+    return this.getArtistList(params.pageSize, params.loadCount);
   }
 
   async createArtist(data: Omit<Artist, "id">): Promise<ISuccessResponse<Artist>> {
-     throw new Error("Create Artist not supported");
+    throw new Error("Create Artist not supported");
   }
 
   async updateArtist(id: number | string, data: Partial<Artist>): Promise<ISuccessResponse<Artist>> {
@@ -91,12 +91,12 @@ export class SubsonicArtistAdapter implements IArtistAdapter {
   }
 
   async getArtistById(id: number | string) {
-     const res = await this.client.get<SubsonicArtistInfo>("getArtist", { id: id.toString() });
-     return this.response(mapSubsonicArtistToArtist(res.artist, (id) => this.client.getCoverUrl(id)));
+    const res = await this.client.get<SubsonicArtistInfo>("getArtist", { id: id.toString() });
+    return this.response(mapSubsonicArtistToArtist(res.artist, (id) => this.client.getCoverUrl(id)));
   }
 
   async getLatestArtists(type: string, random?: boolean, pageSize?: number) {
-      // Not supported directly, return random subset?
-      return this.response([]); 
+    // Not supported directly, return random subset?
+    return this.response([]);
   }
 }

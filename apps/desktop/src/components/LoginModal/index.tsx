@@ -12,13 +12,15 @@ import {
   register,
   setServiceConfig,
   SOURCEMAP,
+  SOURCETIPSMAP,
   useNativeAdapter,
-  useSubsonicAdapter
+  useSubsonicAdapter,
 } from "@soundx/services";
 import {
   AutoComplete,
   Button,
   Checkbox,
+  Flex,
   Form,
   Input,
   Modal,
@@ -27,6 +29,9 @@ import {
   Typography,
 } from "antd";
 import { useEffect, useState } from "react";
+import emby from "../../assets/emby.png";
+import logo from "../../assets/logo.png";
+import subsonic from "../../assets/subsonic.png";
 import { useMessage } from "../../context/MessageContext";
 import { useAuthStore } from "../../store/auth";
 import styles from "./index.module.less";
@@ -39,7 +44,7 @@ const LoginModal: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [sourceType, setSourceType] = useState<string>(
-    () => localStorage.getItem("selectedSourceType") || "AudioDock"
+    () => localStorage.getItem("selectedSourceType") || "AudioDock",
   );
   const [serverHistory, setServerHistory] = useState<{ value: string }[]>([]);
   const [rememberMe, setRememberMe] = useState(false);
@@ -60,7 +65,9 @@ const LoginModal: React.FC = () => {
     if (history) {
       setServerHistory(JSON.parse(history));
     } else {
-      setServerHistory(sourceType === "AudioDock" ? [{ value: "http://localhost:3000" }] : []);
+      setServerHistory(
+        sourceType === "AudioDock" ? [{ value: "http://localhost:3000" }] : [],
+      );
     }
 
     const addressKey = getSourceAddressKey(sourceType);
@@ -70,7 +77,11 @@ const LoginModal: React.FC = () => {
       // checkServerConnectivity(savedAddress, sourceType);
       restoreCredentials(savedAddress, sourceType);
     } else {
-      loginForm.setFieldsValue({ serverAddress: "", username: "", password: "" });
+      loginForm.setFieldsValue({
+        serverAddress: "",
+        username: "",
+        password: "",
+      });
       setServerStatus(null);
     }
   }, [sourceType, loginForm]);
@@ -100,13 +111,18 @@ const LoginModal: React.FC = () => {
     }
   };
 
-  const checkServerConnectivity = async (address: string, type: string, username?: string, password?: string) => {
+  const checkServerConnectivity = async (
+    address: string,
+    type: string,
+    username?: string,
+    password?: string,
+  ) => {
     if (!address) return;
     if (!address.startsWith("http://") && !address.startsWith("https://"))
       return;
 
     setServerStatus("validating");
-    
+
     // Configure adapter temporarily for check
     configureAdapter(type, address, username, password);
 
@@ -119,15 +135,15 @@ const LoginModal: React.FC = () => {
       clearTimeout(timeoutId);
 
       if (response) {
-          setServerStatus("success");
-          message.success(`${type} 服务已连接`);
-          return;
+        setServerStatus("success");
+        message.success(`${type} 服务已连接`);
+        return;
       }
       // Special handling for Subsonic: if we get a response but code isn't 200, it might be auth error
       // which still means the server is reachable and is a Subsonic server.
       if (SOURCEMAP[type as keyof typeof SOURCEMAP] === "subsonic") {
-          setServerStatus("success");
-          return;
+        setServerStatus("success");
+        return;
       }
 
       throw new Error("Invalid response");
@@ -138,24 +154,29 @@ const LoginModal: React.FC = () => {
     }
   };
 
-  const configureAdapter = (type: string, address: string, username?: string, password?: string) => {
+  const configureAdapter = (
+    type: string,
+    address: string,
+    username?: string,
+    password?: string,
+  ) => {
     const mappedType = SOURCEMAP[type as keyof typeof SOURCEMAP] || "audiodock";
-    
+
     // Set global base URL in request module (if available/exposed)
     // In desktop project, request instance is updated via setBaseURL equivalent
     localStorage.setItem("serverAddress", address); // This affects getBaseURL() in https/index.ts
-    
+
     // Set credentials in global service config
     setServiceConfig({
-        username,
-        password,
-        clientName: "SoundX Desktop"
+      username,
+      password,
+      clientName: "SoundX Desktop",
     });
 
     if (mappedType === "subsonic") {
-        useSubsonicAdapter();
+      useSubsonicAdapter();
     } else {
-        useNativeAdapter();
+      useNativeAdapter();
     }
   };
 
@@ -163,7 +184,7 @@ const LoginModal: React.FC = () => {
     setLoading(true);
     const type = sourceType;
     const addressKey = getSourceAddressKey(type);
-    
+
     localStorage.setItem(addressKey, values.serverAddress);
     localStorage.setItem("selectedSourceType", type);
     saveToHistory(values.serverAddress, type);
@@ -175,10 +196,20 @@ const LoginModal: React.FC = () => {
     const credsKey = `creds_${type}_${baseURL}`;
 
     // Final adapter configuration with full credentials
-    configureAdapter(type, values.serverAddress, values.username, values.password);
+    configureAdapter(
+      type,
+      values.serverAddress,
+      values.username,
+      values.password,
+    );
 
     try {
-      checkServerConnectivity(values.serverAddress, type, values.username, values.password);
+      checkServerConnectivity(
+        values.serverAddress,
+        type,
+        values.username,
+        values.password,
+      );
 
       if (isLogin) {
         const res = await login({
@@ -233,9 +264,21 @@ const LoginModal: React.FC = () => {
     }
   };
 
-  const sourceOptions = Object.keys(SOURCEMAP).map(key => ({
-      label: key,
-      value: key
+  const sourceOptions = Object.keys(SOURCEMAP).map((key) => ({
+    label: (
+      <Flex gap={8} align="center">
+        {key === "Emby" ? (
+          <img style={{ width: 24 }} src={emby} />
+        ) : key === "Subsonic" ? (
+          <img style={{ width: 24 }} src={subsonic} />
+        ) : (
+          <img style={{ width: 24 }} src={logo} />
+        )}
+        <span>{key}</span>
+      </Flex>
+    ),
+    value: key,
+    disabled: key === "Emby",
   }));
 
   return (
@@ -265,17 +308,22 @@ const LoginModal: React.FC = () => {
         </Text>
       </div>
 
-      <div style={{ marginBottom: 24, textAlign: 'center' }}>
-          <Segmented
-              block
-              size="large"
-              options={sourceOptions}
-              value={sourceType}
-              onChange={(val) => {
-                  setSourceType(val as string);
-                  localStorage.setItem("selectedSourceType", val as string);
-              }}
-          />
+      <div style={{ marginBottom: 24 }}>
+        <Segmented
+          options={sourceOptions}
+          value={sourceType}
+          onChange={(val) => {
+            setSourceType(val as string);
+            localStorage.setItem("selectedSourceType", val as string);
+          }}
+        />
+      </div>
+
+      <div
+        className={styles.switchText}
+        style={{ color: themeToken.colorTextSecondary, textAlign: 'left', fontSize: 12 }}
+      >
+        {SOURCETIPSMAP[sourceType as keyof typeof SOURCETIPSMAP]}
       </div>
 
       <Form
@@ -438,35 +486,42 @@ const LoginModal: React.FC = () => {
         )}
       </Form>
 
-      {sourceType === "AudioDock" && (
-          <div
-            className={styles.switchText}
-            style={{ color: themeToken.colorTextSecondary }}
-          >
-            {isLogin ? (
-              <>
-                没有账号？
-                <span
-                  className={styles.switchLink}
-                  onClick={() => setIsLogin(false)}
-                  style={{ color: themeToken.colorPrimary }}
-                >
-                  注册
-                </span>
-              </>
-            ) : (
-              <>
-                已有账号？
-                <span
-                  className={styles.switchLink}
-                  onClick={() => setIsLogin(true)}
-                  style={{ color: themeToken.colorPrimary }}
-                >
-                  登陆
-                </span>
-              </>
-            )}
-          </div>
+      {sourceType === "AudioDock" ? (
+        <div
+          className={styles.switchText}
+          style={{ color: themeToken.colorTextSecondary }}
+        >
+          {isLogin ? (
+            <>
+              没有账号？
+              <span
+                className={styles.switchLink}
+                onClick={() => setIsLogin(false)}
+                style={{ color: themeToken.colorPrimary }}
+              >
+                注册
+              </span>
+            </>
+          ) : (
+            <>
+              已有账号？
+              <span
+                className={styles.switchLink}
+                onClick={() => setIsLogin(true)}
+                style={{ color: themeToken.colorPrimary }}
+              >
+                登陆
+              </span>
+            </>
+          )}
+        </div>
+      ) : (
+        <div
+          className={styles.switchText}
+          style={{ color: themeToken.colorTextSecondary }}
+        >
+          AudioDock 听见你的声音
+        </div>
       )}
 
       <div

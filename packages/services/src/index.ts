@@ -18,6 +18,12 @@ export * from "./userAudiobookHistory";
 
 export const SOURCEMAP = {
     AudioDock: "audiodock",
-    Navidrome: "subsonic",
-    AudioServe: "subsonic",
+    Subsonic: "subsonic",
+    Emby: "emby",
+}
+
+export const SOURCETIPSMAP = {
+    AudioDock: "所有支持 AudioDock 官方服务端",
+    Subsonic: "所有支持 Subsonic 协议的服务端，例如：Navidrome、Gonic 等",
+    Emby: "所有支持 Emby 协议的服务端",
 }

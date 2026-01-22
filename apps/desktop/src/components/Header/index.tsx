@@ -27,7 +27,12 @@ import {
   getRunningImportTask,
   getSearchHistory,
   searchAll,
+  setServiceConfig,
+  SOURCEMAP,
+  SOURCETIPSMAP,
   TaskStatus,
+  useNativeAdapter,
+  useSubsonicAdapter,
   type ImportTask,
   type SearchResults as SearchResultsType,
 } from "@soundx/services";
@@ -38,8 +43,9 @@ import {
   Modal,
   Popover,
   Progress,
+  Segmented,
   theme,
-  Tooltip,
+  Tooltip
 } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -52,6 +58,99 @@ import { isWindows } from "../../utils/platform";
 import { usePlayMode } from "../../utils/playMode";
 import SearchResults from "../SearchResults";
 import styles from "./index.module.less";
+
+import emby from "../../assets/emby.png";
+import logo from "../../assets/logo.png";
+import subsonic from "../../assets/subsonic.png";
+
+const ServerSwitcherModal: React.FC<{
+  onSelect: (url: string, type: string) => void;
+}> = ({ onSelect }) => {
+  const [sourceType, setSourceType] = useState<string>(
+    () => localStorage.getItem("selectedSourceType") || "AudioDock"
+  );
+  const [history, setHistory] = useState<{ value: string }[]>([]);
+  const { token: themeToken } = theme.useToken();
+
+  useEffect(() => {
+    const historyKey = `serverHistory_${sourceType}`;
+    const data = localStorage.getItem(historyKey);
+    if (data) {
+      setHistory(JSON.parse(data));
+    } else {
+      setHistory(
+        sourceType === "AudioDock" ? [{ value: "http://localhost:3000" }] : []
+      );
+    }
+  }, [sourceType]);
+
+  const sourceOptions = Object.keys(SOURCEMAP).map((key) => ({
+    label: (
+      <Flex gap={8} align="center">
+        {key === "Emby" ? (
+          <img style={{ width: 24 }} src={emby} />
+        ) : key === "Subsonic" ? (
+          <img style={{ width: 24 }} src={subsonic} />
+        ) : (
+          <img style={{ width: 24 }} src={logo} />
+        )}
+        <span>{key}</span>
+      </Flex>
+    ),
+    value: key,
+    disabled: key === "Emby",
+  }));
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ marginBottom: 16 }}>
+        <Segmented
+          options={sourceOptions}
+          value={sourceType}
+          onChange={(val) => setSourceType(val as string)}
+          block
+        />
+      </div>
+      <div
+        style={{
+          marginBottom: 16,
+          fontSize: 12,
+          color: themeToken.colorTextSecondary,
+        }}
+      >
+        {SOURCETIPSMAP[sourceType as keyof typeof SOURCETIPSMAP]}
+      </div>
+      <Flex vertical gap={8} style={{ maxHeight: 300, overflowY: "auto" }}>
+        {history.map((item) => (
+          <Button
+            key={item.value}
+            onClick={() => onSelect(item.value, sourceType)}
+            type={
+              localStorage.getItem("serverAddress") === item.value &&
+              localStorage.getItem("selectedSourceType") === sourceType
+                ? "primary"
+                : "default"
+            }
+            style={{ textAlign: "left", height: "auto", padding: "8px 16px" }}
+          >
+            {item.value}
+          </Button>
+        ))}
+        {history.length === 0 && (
+          <div
+            style={{
+              textAlign: "center",
+              padding: 20,
+              color: themeToken.colorTextTertiary,
+            }}
+          >
+            暂无历史记录
+          </div>
+        )}
+      </Flex>
+    </div>
+  );
+};
 
 const Header: React.FC = () => {
   const message = useMessage();
@@ -403,35 +502,54 @@ const Header: React.FC = () => {
             className={styles.actionIcon}
             style={actionIconStyle}
             onClick={() => {
-              const history = localStorage.getItem("serverHistory");
-              const serverHistory = history ? JSON.parse(history) : [];
+              const handleSwitchServer = (url: string, type: string) => {
+                const mappedType =
+                  SOURCEMAP[type as keyof typeof SOURCEMAP] || "audiodock";
+
+                // 1. Update localStorage
+                localStorage.setItem("serverAddress", url);
+                localStorage.setItem("selectedSourceType", type);
+                localStorage.setItem(`serverAddress_${type}`, url);
+
+                // 2. Load credentials if available
+                const credsKey = `creds_${type}_${url}`;
+                const savedCreds = localStorage.getItem(credsKey);
+                let username = undefined;
+                let password = undefined;
+                if (savedCreds) {
+                  const creds = JSON.parse(savedCreds);
+                  username = creds.username;
+                  password = creds.password;
+                }
+
+                // 3. Configure service and adapter
+                setServiceConfig({
+                  username,
+                  password,
+                  clientName: "SoundX Desktop",
+                });
+
+                if (mappedType === "subsonic") {
+                  useSubsonicAdapter();
+                } else {
+                  useNativeAdapter();
+                }
+
+                // 4. Update auth store
+                useAuthStore.getState().switchServer(url);
+
+                // 5. Cleanup and reload
+                Modal.destroyAll();
+                message.success(`已切换至 ${type} 服务端: ${url}`);
+                window.location.reload();
+              };
 
               modal.confirm({
                 title: "切换服务端",
-                content: (
-                  <Flex vertical gap={8} style={{ marginTop: 16 }}>
-                    {serverHistory.map((item: any) => (
-                      <Button
-                        key={item.value}
-                        onClick={() => {
-                          useAuthStore.getState().switchServer(item.value);
-                          Modal.destroyAll();
-                          message.success(`已切换至 ${item.value}`);
-                          window.location.reload();
-                        }}
-                        type={
-                          localStorage.getItem("serverAddress") === item.value
-                            ? "primary"
-                            : "default"
-                        }
-                      >
-                        {item.value}
-                      </Button>
-                    ))}
-                  </Flex>
-                ),
+                content: <ServerSwitcherModal onSelect={handleSwitchServer} />,
                 footer: null,
                 closable: true,
+                width: 460,
               });
             }}
           >
