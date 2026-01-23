@@ -45,6 +45,7 @@ import { getImageUrl } from "../../src/utils/image";
 import { usePlayMode } from "../../src/utils/playMode";
 
 import { useCheckUpdate } from "@/hooks/useCheckUpdate";
+import { CachedImage } from "@/src/components/CachedImage";
 import { UpdateModal } from "@/src/components/UpdateModal";
 import { Ionicons } from "@expo/vector-icons";
 const logo = require("../../assets/images/logo.png");
@@ -64,7 +65,7 @@ const StackedCover = ({ tracks }: { tracks: any[] }) => {
         const coverUrl = getImageUrl(track.cover, "https://picsum.photos/100");
 
         return (
-          <Image
+          <CachedImage
             key={track.id}
             source={{ uri: coverUrl }}
             style={[
@@ -458,9 +459,9 @@ export default function PersonalScreen() {
                 // Use a folder icon or similar if cover missing?
                 // Or just use first track cover if we aggregated?
                 // We passed cover in albumMap.
-                <Image source={{ uri: coverUrl }} style={styles.itemCover} />
+                <CachedImage source={{ uri: coverUrl }} style={styles.itemCover} />
               ) : (
-                <Image source={{ uri: coverUrl }} style={styles.itemCover} />
+                <CachedImage source={{ uri: coverUrl }} style={styles.itemCover} />
               )}
 
               {/* Progress Bar for Audiobook Albums */}
@@ -607,7 +608,7 @@ export default function PersonalScreen() {
 
       {/* User Info */}
       <View style={styles.userInfo}>
-        <Image
+        <CachedImage
           source={{ uri: getImageUrl((user as any)?.avatar, "https://picsum.photos/200") }} // Placeholder for avatar
           style={styles.avatar}
         />

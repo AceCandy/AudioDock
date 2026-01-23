@@ -16,6 +16,7 @@ import { useSettings } from "../src/context/SettingsContext";
 import { useTheme } from "../src/context/ThemeContext";
 import { clearCache, getCacheSize } from "../src/services/cache";
 import { usePlayMode } from "../src/utils/playMode";
+import { getLocalVersion } from "../src/utils/updateUtils";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -223,7 +224,7 @@ export default function SettingsScreen() {
 
         <View style={styles.footer}>
           <Text style={[styles.versionText, { color: colors.secondary }]}>
-            AudioBook Mobile v1.0.0
+            AudioDock Mobile v{getLocalVersion()}
           </Text>
         </View>
       </ScrollView>

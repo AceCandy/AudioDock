@@ -9,19 +9,19 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import {
   RenderItemParams,
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CachedImage } from "../../src/components/CachedImage";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/context/ThemeContext";
 import { cacheUtils } from "../../src/utils/cache";
@@ -347,7 +347,7 @@ export default function HomeScreen() {
                           playTrack(track);
                         }}
                       >
-                        <Image
+                        <CachedImage
                           source={{
                             uri: getImageUrl(track.cover, `https://picsum.photos/seed/${track.id}/200/200`),
                           }}
@@ -392,7 +392,7 @@ export default function HomeScreen() {
                           router.push(`/artist/${item.id}`);
                         }}
                       >
-                        <Image
+                        <CachedImage
                           source={{
                             uri: getImageUrl(item.avatar || item.cover, `https://picsum.photos/seed/${item.id}/200/200`),
                           }}
@@ -420,7 +420,7 @@ export default function HomeScreen() {
                         }}
                       >
                         <View style={styles.albumImageContainer}>
-                          <Image
+                          <CachedImage
                             source={{
                               uri: getImageUrl(item.cover, `https://picsum.photos/seed/${item.id}/200/200`),
                             }}
