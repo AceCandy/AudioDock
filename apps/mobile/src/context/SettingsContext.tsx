@@ -7,10 +7,11 @@ interface SettingsState {
   cacheEnabled: boolean;
   autoOrientation: boolean;
   autoTheme: boolean;
+  eqGains: number[];
 }
 
 interface SettingsContextType extends SettingsState {
-  updateSetting: (key: keyof SettingsState, value: boolean) => Promise<void>;
+  updateSetting: (key: keyof SettingsState, value: any) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -23,6 +24,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     cacheEnabled: false,
     autoOrientation: true,
     autoTheme: true,
+    eqGains: [0, 0, 0, 0, 0],
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +45,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const updateSetting = async (key: keyof SettingsState, value: boolean) => {
+  const updateSetting = async (key: keyof SettingsState, value: any) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     try {

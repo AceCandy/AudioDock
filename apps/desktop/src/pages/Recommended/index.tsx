@@ -1,4 +1,10 @@
-import { EnterOutlined, HeartOutlined, PlayCircleOutlined, SettingOutlined, SyncOutlined } from "@ant-design/icons";
+import {
+  CaretRightOutlined,
+  EnterOutlined,
+  HeartOutlined,
+  SettingOutlined,
+  SyncOutlined
+} from "@ant-design/icons";
 import {
   getAlbumHistory,
   getLatestArtists,
@@ -9,7 +15,16 @@ import {
   toggleTrackUnLike,
 } from "@soundx/services";
 import { useDebounceFn } from "ahooks";
-import { Avatar, Button, Col, Flex, Row, Skeleton, theme, Typography } from "antd";
+import {
+  Avatar,
+  Button,
+  Col,
+  Flex,
+  Row,
+  Skeleton,
+  theme,
+  Typography,
+} from "antd";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Cover from "../../components/Cover/index";
@@ -399,12 +414,14 @@ const Recommended: React.FC = () => {
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               {section.id === "tracks" && section.items.length > 0 && (
                 <Button
-                  type="primary"
-                  icon={<PlayCircleOutlined />}
+                  type="text"
+                  className={styles.refreshButton}
+                  style={{ color: themeToken.colorTextBase }}
                   size="small"
                   onClick={() => handlePlaySection(section.id)}
                 >
-                  播放全部
+                  播放
+                  <CaretRightOutlined />
                 </Button>
               )}
               <Button
@@ -498,7 +515,7 @@ const Recommended: React.FC = () => {
                             style={{
                               fontSize: 16,
                               color: item.likedByUsers?.some(
-                                (like: any) => like.userId === user?.id
+                                (like: any) => like.userId === user?.id,
                               )
                                 ? "#ff4d4f"
                                 : themeToken.colorTextSecondary,
@@ -507,7 +524,7 @@ const Recommended: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               const isLiked = item.likedByUsers?.some(
-                                (like: any) => like.userId === user?.id
+                                (like: any) => like.userId === user?.id,
                               );
                               if (user) {
                                 if (isLiked) {
@@ -527,16 +544,16 @@ const Recommended: React.FC = () => {
                                                           t.likedByUsers?.filter(
                                                             (l: any) =>
                                                               l.userId !==
-                                                              user.id
+                                                              user.id,
                                                           ),
                                                       }
-                                                    : t
+                                                    : t,
                                                 ),
                                               }
-                                            : s
-                                        )
+                                            : s,
+                                        ),
                                       );
-                                    }
+                                    },
                                   );
                                 } else {
                                   toggleTrackLike(item.id, user.id).then(() => {
@@ -557,16 +574,15 @@ const Recommended: React.FC = () => {
                                                           id: 0,
                                                           trackId: item.id,
                                                           userId: user.id,
-                                                          createdAt:
-                                                            new Date(),
+                                                          createdAt: new Date(),
                                                         },
                                                       ],
                                                     }
-                                                  : t
+                                                  : t,
                                               ),
                                             }
-                                          : s
-                                      )
+                                          : s,
+                                      ),
                                     );
                                   });
                                 }
@@ -582,35 +598,50 @@ const Recommended: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               // Add to playlist next - insert after currently playing track
-                              const currentPlaylist = [...(usePlayerStore.getState().playlist || [])];
-                              const currentTrack = usePlayerStore.getState().currentTrack;
-                              
+                              const currentPlaylist = [
+                                ...(usePlayerStore.getState().playlist || []),
+                              ];
+                              const currentTrack =
+                                usePlayerStore.getState().currentTrack;
+
                               if (currentTrack) {
                                 const currentIndex = currentPlaylist.findIndex(
-                                  (t) => t.id === currentTrack.id
+                                  (t) => t.id === currentTrack.id,
                                 );
-                                
+
                                 // Remove the track if it already exists in the playlist
                                 const existingIndex = currentPlaylist.findIndex(
-                                  (t) => t.id === item.id
+                                  (t) => t.id === item.id,
                                 );
                                 if (existingIndex !== -1) {
                                   currentPlaylist.splice(existingIndex, 1);
                                   // Adjust currentIndex if needed
                                   if (existingIndex <= currentIndex) {
-                                    currentPlaylist.splice(currentIndex, 0, item);
+                                    currentPlaylist.splice(
+                                      currentIndex,
+                                      0,
+                                      item,
+                                    );
                                   } else {
-                                    currentPlaylist.splice(currentIndex + 1, 0, item);
+                                    currentPlaylist.splice(
+                                      currentIndex + 1,
+                                      0,
+                                      item,
+                                    );
                                   }
                                 } else {
                                   // Insert after current track
-                                  currentPlaylist.splice(currentIndex + 1, 0, item);
+                                  currentPlaylist.splice(
+                                    currentIndex + 1,
+                                    0,
+                                    item,
+                                  );
                                 }
                               } else {
                                 // No current track, add to beginning
                                 currentPlaylist.unshift(item);
                               }
-                              
+
                               setPlaylist(currentPlaylist);
                             }}
                           />

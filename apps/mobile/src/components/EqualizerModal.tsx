@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as AudioEq from "../../modules/audio-eq";
+import { useSettings } from "../context/SettingsContext";
 import { getAudioSessionId } from "../utils/TrackPlayerExtension";
 
 const BANDS = [
@@ -32,7 +33,19 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
 }) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const [gains, setGains] = useState<number[]>([0, 0, 0, 0, 0]);
+  const { eqGains, updateSetting } = useSettings();
+
+  const [gains, setGains] = useState<number[]>(eqGains || [0, 0, 0, 0, 0]);
+
+  useEffect(() => {
+    if (eqGains) {
+      setGains(eqGains);
+      // 如果 EQ 已经初始化，这里也要同步最新的增益（以防异步加载延迟）
+      eqGains.forEach((gain, index) => {
+        AudioEq.setGain(index, gain);
+      });
+    }
+  }, [eqGains]);
 
   useEffect(() => {
     if (visible) {
@@ -41,11 +54,13 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
           // 挂载 EQ 到这个真实的 SessionId
           const success = AudioEq.initEqualizer(sessionId);
           if (success) {
-            console.log("EQ 挂载成功！");
+            console.log("EQ 挂载成功！同步现有增益...");
+            // 初始化成功后，立即同步当前的增益值
+            const currentGains = eqGains || gains;
+            currentGains.forEach((gain, index) => {
+              AudioEq.setGain(index, gain);
+            });
           }
-        } else {
-          // 如果获取失败，尝试用 0 (全局混音) 兜底，或者是放弃
-          // AudioEq.initEqualizer(0);
         }
       });
     }
@@ -55,12 +70,14 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
     const newGains = [...gains];
     newGains[bandIndex] = value;
     setGains(newGains);
+    updateSetting("eqGains", newGains);
     AudioEq.setGain(bandIndex, value);
   };
 
   const resetEq = () => {
     const defaultGains = [0, 0, 0, 0, 0];
     setGains(defaultGains);
+    updateSetting("eqGains", defaultGains);
     defaultGains.forEach((gain, index) => {
       AudioEq.setGain(index, gain);
     });
