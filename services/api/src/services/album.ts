@@ -212,10 +212,43 @@ export class AlbumService {
       where: whereClause,
     });
 
-    if (candidates.length <= limit) return candidates;
+    // Strategy: Result = Shuffled Unlistened + Random Listened (if needed) to meet limit
+    let result: Album[] = [];
 
-    const shuffled = candidates.sort(() => Math.random() - 0.5);
-    const result = shuffled.slice(0, limit);
+    if (candidates.length <= limit) {
+      result = candidates;
+    } else {
+      result = candidates.sort(() => Math.random() - 0.5).slice(0, limit);
+    }
+
+    // Fallback: If not enough unlistened content, fill with listened content
+    if (result.length < limit) {
+      const needed = limit - result.length;
+      
+      const fallbackWhere: any = { status: 'ACTIVE' };
+      if (type) fallbackWhere.type = type;
+      if (listenedIds.length > 0) {
+        fallbackWhere.id = { in: listenedIds };
+      }
+
+      // If we have listened IDs, pick from them. 
+      // If user has listened to nothing (unlikely here since we are in the fallback block imply candidates were exhausted/empty which means everything IS listened or DB is empty),
+      // we just pick random if listenedIds exist.
+      if (listenedIds.length > 0) {
+        const fallbackCandidates = await this.prisma.album.findMany({
+          where: fallbackWhere,
+        });
+        const fallbackShuffled = fallbackCandidates.sort(() => Math.random() - 0.5).slice(0, needed);
+        result = [...result, ...fallbackShuffled];
+      } else {
+         // This block handles the edge case where the DB is just small (total albums < limit),
+         // and we already fetched all available 'candidates' (which were all available albums).
+         // So 'result' already contains everything possible. No fallback needed.
+      }
+    }
+
+    // Shuffle one last time to mix unlistened and listened
+    result = result.sort(() => Math.random() - 0.5);
 
     if (type === 'AUDIOBOOK') {
       return await this.attachProgressToAlbums(result, userId);

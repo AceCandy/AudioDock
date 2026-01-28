@@ -21,6 +21,72 @@ const BANDS = [
   { index: 4, label: "14kHz", name: "超高音" },
 ];
 
+const BandSlider = React.memo(({ 
+  index, label, name, value: initialValue, onGainChange, onSlidingComplete, colors 
+}: any) => {
+  const [localValue, setLocalValue] = useState(initialValue);
+
+  // 当外部值变化（如点击重置）时同步本地状态
+  useEffect(() => {
+    setLocalValue(initialValue);
+  }, [initialValue]);
+
+  const handleValueChange = (val: number | number[]) => {
+    const v = Array.isArray(val) ? val[0] : val;
+    setLocalValue(v); // UI 立即响应
+    onGainChange(index, v); // 声音立即响应
+  };
+
+  const handleSlidingComplete = (val: number | number[]) => {
+    const v = Array.isArray(val) ? val[0] : val;
+    onSlidingComplete(index, v); // 持久化保存
+  };
+
+  return (
+    <View style={styles.bandColumn}>
+      <Text style={[styles.dbText, { color: colors.text }]}>
+        {localValue}dB
+      </Text>
+
+      <View style={styles.sliderWrapper}>
+        <Slider
+          containerStyle={styles.slider}
+          minimumValue={-10}
+          maximumValue={10}
+          step={1}
+          value={localValue}
+          onValueChange={handleValueChange}
+          onSlidingComplete={handleSlidingComplete}
+          minimumTrackTintColor={colors.primary}
+          maximumTrackTintColor={colors.border}
+          thumbTintColor={colors.primary}
+          trackStyle={{ height: 6, borderRadius: 3 }} // 横向时它是 height
+          thumbStyle={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            backgroundColor: colors.background,
+            borderWidth: 1,
+            borderColor: colors.border,
+            elevation: 5,
+            shadowColor: colors.text,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+          }}
+        />
+      </View>
+
+      <Text style={[styles.freqLabel, { color: colors.secondary }]}>
+        {label}
+      </Text>
+      <Text style={[styles.bandName, { color: colors.secondary }]}>
+        {name}
+      </Text>
+    </View>
+  );
+});
+
 interface EqualizerModalProps {
   visible: boolean;
   onClose: () => void;
@@ -63,11 +129,18 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
   };
 
   const handleGainChange = (bandIndex: number, value: number) => {
-    const newGains = [...gains];
-    newGains[bandIndex] = value;
-    setGains(newGains);
-    updateSetting("eqGains", newGains);
+    // 这里不再频繁调用 setGains (交给子组件 localState)，只处理音效。
+    // 这能彻底消除主线程阻塞，解决 A 动 B 的漂移问题。
     AudioEq.setGain(bandIndex, value);
+  };
+
+  const handleSlidingComplete = (bandIndex: number, value: number) => {
+    setGains((prev) => {
+      const newGains = [...prev];
+      newGains[bandIndex] = value;
+      updateSetting("eqGains", newGains);
+      return newGains;
+    });
   };
 
   const resetEq = () => {
@@ -123,48 +196,16 @@ export const EqualizerModal: React.FC<EqualizerModalProps> = ({
 
             <View style={styles.bandsContainer}>
               {BANDS.map((band) => (
-                <View key={band.index} style={styles.bandColumn}>
-                  <Text style={[styles.dbText, { color: colors.text }]}>
-                    {gains[band.index]}dB
-                  </Text>
-
-                  <View style={styles.sliderWrapper}>
-                    <Slider
-                      containerStyle={styles.slider}
-                      minimumValue={-10}
-                      maximumValue={10}
-                      step={1}
-                      value={gains[band.index]}
-                      onValueChange={(val) =>
-                        handleGainChange(
-                          band.index,
-                          Array.isArray(val) ? val[0] : val,
-                        )
-                      }
-                      minimumTrackTintColor={colors.primary}
-                      maximumTrackTintColor={colors.border}
-                      renderThumbComponent={() => (
-                        <View
-                          style={{
-                            width: 15,
-                            height: 15,
-                            borderRadius: 8,
-                            backgroundColor: colors.primary,
-                            borderWidth: 2,
-                            borderColor: "#fff",
-                          }}
-                        />
-                      )}
-                    />
-                  </View>
-
-                  <Text style={[styles.freqLabel, { color: colors.secondary }]}>
-                    {band.label}
-                  </Text>
-                  <Text style={[styles.bandName, { color: colors.secondary }]}>
-                    {band.name}
-                  </Text>
-                </View>
+                <BandSlider
+                  key={`band-${band.index}`}
+                  index={band.index}
+                  label={band.label}
+                  name={band.name}
+                  value={gains[band.index]}
+                  onGainChange={handleGainChange}
+                  onSlidingComplete={handleSlidingComplete}
+                  colors={colors}
+                />
               ))}
             </View>
 
@@ -216,24 +257,26 @@ const styles = StyleSheet.create({
   },
   bandsContainer: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
-    height: 280,
+    justifyContent: "space-evenly", // 均匀分布，自动计算间距
+    height: 300,
+    width: "100%",
     paddingHorizontal: 10,
+    marginTop: 10,
   },
   bandColumn: {
     alignItems: "center",
-    width: 70,
+    width: 60,
   },
   sliderWrapper: {
-    height: 180,
-    width: 40,
+    height: 220, // 视觉高度
+    width: 40,   // 视觉宽度
     justifyContent: "center",
     alignItems: "center",
   },
   slider: {
-    width: 160,
-    height: 40,
-    transform: [{ rotate: "-90deg" }],
+    width: 220, // 物理长度（被旋转成为视觉高度）
+    height: 40, // 物理触控宽度
+    transform: [{ rotate: "-90deg" }], // 暴力旋转修正
   },
   dbText: {
     fontSize: 12,

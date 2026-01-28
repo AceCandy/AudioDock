@@ -28,12 +28,19 @@ interface CoverComponent
     item: Album | Track;
     size?: number;
     isTrack?: boolean;
+    isHistory?: boolean;
     onClick?: (item: Album | Track) => void;
   }> {
   Skeleton: React.FC;
 }
 
-const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
+const Cover: CoverComponent = ({
+  item,
+  size,
+  isTrack = false,
+  isHistory = false,
+  onClick,
+}) => {
   const message = useMessage();
   const navigate = useNavigate();
   const { play, setPlaylist } = usePlayerStore();
@@ -74,8 +81,13 @@ const Cover: CoverComponent = ({ item, size, isTrack = false, onClick }) => {
       play(item as Track);
       setPlaylist([item as Track]);
     } else {
-      // For albums, navigate to detail page
-      navigate(`/detail?id=${item.id}`);
+      // If provided with resume data AND it is from history section, play directly instead of navigating
+      if (isHistory && (item as any).resumeTrackId) {
+        handlePlayAlbum();
+      } else {
+        // For regular albums, navigate to detail page
+        navigate(`/detail?id=${item.id}`);
+      }
     }
   };
 

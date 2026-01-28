@@ -2,7 +2,7 @@ import { usePlayer } from "@/src/context/PlayerContext";
 import { EvilIcons, Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { getAlbumHistory, getLatestArtists, getLatestTracks, getRecentAlbums, getRecommendedAlbums, toggleTrackLike, toggleTrackUnLike } from "@soundx/services";
+import { getAlbumHistory, getAlbumTracks, getLatestArtists, getLatestTracks, getRecentAlbums, getRecommendedAlbums, toggleTrackLike, toggleTrackUnLike } from "@soundx/services";
 import * as Device from "expo-device";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -638,9 +638,36 @@ export default function HomeScreen() {
                     return (
                       <TouchableOpacity
                         style={styles.albumCard}
-                        onPress={() => {
-                          console.log("Navigating to album:", item.id);
-                          router.push(`/album/${item.id}`);
+                        onPress={async () => {
+                          // Only 'history' section supports direct resume playback
+                          if (section.id === "history") {
+                            const resumeTrackId = (item as any).resumeTrackId;
+                            const resumeProgress = (item as any).resumeProgress;
+
+                            if (resumeTrackId) {
+                              try {
+                                const res = await getAlbumTracks(item.id, 1000, 0);
+                                if (res.code === 200 && res.data.list.length > 0) {
+                                  const tracks = res.data.list;
+                                  let targetIndex = tracks.findIndex((t: any) => t.id === resumeTrackId);
+                                  if (targetIndex === -1) targetIndex = 0;
+                                  
+                                  await playTrackList(tracks, targetIndex, resumeProgress);
+                                } else {
+                                  router.push(`/album/${item.id}`);
+                                }
+                              } catch (e) {
+                                console.error("Resuming failed:", e);
+                                router.push(`/album/${item.id}`);
+                              }
+                            } else {
+                              router.push(`/album/${item.id}`);
+                            }
+                          } else {
+                            // Other sections (Recent, Recommended) navigate to detail page
+                            console.log("Navigating to album:", item.id);
+                            router.push(`/album/${item.id}`);
+                          }
                         }}
                       >
                         <View style={styles.albumImageContainer}>

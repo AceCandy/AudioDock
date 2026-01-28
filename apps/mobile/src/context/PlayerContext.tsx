@@ -54,7 +54,7 @@ interface PlayerContextType {
   resume: () => Promise<void>;
   seekTo: (position: number) => Promise<void>;
   trackList: Track[];
-  playTrackList: (tracks: Track[], index: number) => Promise<void>;
+  playTrackList: (tracks: Track[], index: number, initialPosition?: number) => Promise<void>;
   playMode: PlayMode;
   togglePlayMode: () => void;
   playNext: () => Promise<void>;
@@ -588,11 +588,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const playTrackList = async (tracks: Track[], index: number) => {
+  const playTrackList = async (tracks: Track[], index: number, initialPosition?: number) => {
     setIsRadioMode(false);
     setTrackList(tracks);
     if (tracks[index]) {
-      await playTrack(tracks[index]);
+      await playTrack(tracks[index], initialPosition);
       savePlaybackState(mode);
     }
   };

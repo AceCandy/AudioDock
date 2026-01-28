@@ -1,21 +1,21 @@
 import {
-  AppstoreOutlined,
-  SyncOutlined,
-  UnorderedListOutlined,
+    AppstoreOutlined,
+    SyncOutlined,
+    UnorderedListOutlined,
 } from "@ant-design/icons";
 import { getAlbumHistory, getTrackHistory } from "@soundx/services";
 import { useInfiniteScroll } from "ahooks";
 import {
-  Button,
-  Col,
-  Empty,
-  Flex,
-  Row,
-  Segmented,
-  Skeleton,
-  Timeline,
-  Typography,
-  theme,
+    Button,
+    Col,
+    Empty,
+    Flex,
+    Row,
+    Segmented,
+    Skeleton,
+    Timeline,
+    Typography,
+    theme,
 } from "antd";
 import React, { useRef, useState } from "react";
 import Cover from "../../components/Cover/index";
@@ -183,7 +183,7 @@ const Listened: React.FC = () => {
             <Row gutter={[24, 24]}>
               {item.items.map((album) => (
                 <Col key={album.id}>
-                  <Cover item={album as Album} />
+                  <Cover item={album as Album} isHistory={true} />
                 </Col>
               ))}
             </Row>

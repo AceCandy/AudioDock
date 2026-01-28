@@ -17,6 +17,12 @@ public class AudioEqModule: Module {
       print("iOS AudioEngine Setup Complete")
     }
 
+    // 自动发现模式 (iOS 保持一致性)
+    Function("discoverAndInit") { () -> Bool in
+      setupAudioEngine()
+      return true
+    }
+
     // 2. 播放 URL (因为 EQ 必须由我们控制播放)
     Function("playUrl") { (urlString: String) in
       guard let url = URL(string: urlString) else { return }

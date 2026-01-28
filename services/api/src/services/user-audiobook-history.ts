@@ -33,12 +33,19 @@ export class UserAudiobookHistoryService {
   }
 
   async findAll() {
-    return await this.prisma.userAudiobookHistory.findMany();
+    return await this.prisma.userAudiobookHistory.findMany({
+      include: {
+        track: true,
+      },
+    });
   }
 
   async findOne(id: number) {
     return await this.prisma.userAudiobookHistory.findUnique({
       where: { id },
+      include: {
+        track: true,
+      },
     });
   }
 
@@ -52,6 +59,9 @@ export class UserAudiobookHistoryService {
     return await this.prisma.userAudiobookHistory.findMany({
       skip: (current - 1) * pageSize,
       take: pageSize,
+      include: {
+        track: true,
+      },
     });
   }
 
@@ -59,6 +69,9 @@ export class UserAudiobookHistoryService {
     return await this.prisma.userAudiobookHistory.findMany({
       skip: loadCount * pageSize,
       take: pageSize,
+      include: {
+        track: true,
+      },
     });
   }
 

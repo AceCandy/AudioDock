@@ -311,15 +311,20 @@ export class AlbumController {
   ): Promise<ISuccessResponse<Album[]> | IErrorResponse> {
     try {
       const userId = (req.user as any)?.userId;
-      if (!userId) {
-        return { code: 500, message: '未认证用户' };
-      }
       const limit = pageSize ? parseInt(pageSize, 10) : 8;
-      const list = await this.albumService.getRandomUnlistenedAlbums(
-        Number(userId),
-        limit,
-        type,
-      );
+      
+      let list: Album[] = [];
+      if (userId) {
+        list = await this.albumService.getRandomUnlistenedAlbums(
+          Number(userId),
+          limit,
+          type,
+        );
+      } else {
+        // Guest user: just return random albums
+        list = await this.albumService.getRandomAlbums(limit, type, 0);
+      }
+      
       return { code: 200, message: 'success', data: list };
     } catch (error) {
       return { code: 500, message: String(error) };

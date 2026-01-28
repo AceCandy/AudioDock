@@ -12,7 +12,10 @@ export function initEqualizer(sessionId: number = 0) {
 
 // 自动发现并初始化
 export function discoverAndInit() {
-  return AudioEq.discoverAndInit();
+  if (AudioEq.discoverAndInit) {
+    return AudioEq.discoverAndInit();
+  }
+  return true; // 如果不存在（尚未编译），返回 true 避免 UI 崩溃
 }
 
 // 2. 设置增益

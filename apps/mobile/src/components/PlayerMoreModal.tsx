@@ -7,11 +7,12 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { isCached } from "../services/cache";
@@ -270,6 +271,7 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
         setEqVisible(true);
       },
       disabled: false,
+      hidden: Platform.OS !== 'android',
     },
   ];
 
@@ -457,7 +459,9 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
                 </View>
               )}
 
-              {standardOptions.map((option, index) => (
+              {standardOptions
+                .filter(opt => !opt.hidden)
+                .map((option, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
@@ -652,7 +656,7 @@ export const PlayerMoreModal: React.FC<PlayerMoreModalProps> = ({
       />
 
       <EqualizerModal
-        visible={eqVisible}
+        visible={Platform.OS === 'android' && eqVisible}
         onClose={() => setEqVisible(false)}
       />
     </>

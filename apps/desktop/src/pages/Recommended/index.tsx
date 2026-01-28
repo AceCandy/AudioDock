@@ -680,7 +680,7 @@ const Recommended: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <Cover item={item} />
+                    <Cover item={item} isHistory={section.id === "history"} />
                   )}
                 </Col>
               ))}

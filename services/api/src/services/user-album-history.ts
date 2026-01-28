@@ -60,7 +60,35 @@ export class UserAlbumHistoryService {
       },
     });
 
-    return list;
+    // Attach resume progress for each album
+    const listWithResume = await Promise.all(list.map(async (item) => {
+      if (!item.album) return item;
+      
+      const lastHistory = await this.prisma.userAudiobookHistory.findFirst({
+        where: {
+          userId,
+          track: {
+            albumId: item.albumId,
+          },
+        },
+        orderBy: {
+          listenedAt: 'desc',
+        },
+        select: {
+          trackId: true,
+          progress: true,
+        },
+      });
+
+      if (lastHistory) {
+        (item.album as any).resumeTrackId = lastHistory.trackId;
+        (item.album as any).resumeProgress = lastHistory.progress;
+      }
+      
+      return item;
+    }));
+
+    return listWithResume;
   }
 
 
