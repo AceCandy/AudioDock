@@ -50,7 +50,7 @@ const Detail: React.FC = () => {
   const { token } = theme.useToken();
   const { play, setPlaylist } = usePlayerStore();
 
-  const pageSize = 20000;
+  const pageSize = 50;
 
   const { run: likeAlbum } = useRequest(toggleAlbumLike, {
     manual: true,
@@ -327,6 +327,34 @@ const Detail: React.FC = () => {
               }
               albumId={album?.id}
             />
+            {/* Load More / Footer */}
+            <div
+              style={{
+                textAlign: "center",
+                marginTop: "32px",
+                paddingBottom: "48px",
+              }}
+            >
+              {loading && page > 0 ? (
+                <Text type="secondary">正在努力加载中...</Text>
+              ) : hasMore ? (
+                <Button
+                  type="text"
+                  onClick={() => id && fetchTracks(id, page, sort, keyword)}
+                  style={{ color: token.colorTextSecondary }}
+                >
+                  加载更多
+                </Button>
+              ) : (
+                tracks.length > 0 && (
+                  <div style={{ opacity: 0.4 }}>
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      — 已经到底啦 —
+                    </Text>
+                  </div>
+                )
+              )}
+            </div>
           </Col>
         </Row>
       </div>
