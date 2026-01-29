@@ -29,6 +29,8 @@ const Songs = lazy(() => import("./pages/Songs/index"));
 import { useEffect } from "react";
 import InviteListener from "./components/InviteListener";
 import MiniPlayer from "./components/MiniPlayer";
+import UpdateModal from "./components/UpdateModal";
+import { useCheckUpdate } from "./hooks/useCheckUpdate";
 import { socketService } from "./services/socket";
 import { useAuthStore } from "./store/auth";
 import { useSettingsStore, type SettingsState } from "./store/settings";
@@ -40,10 +42,18 @@ const AppContent = () => {
   const themeConfig = getThemeConfig(mode);
   const [messageApi, contextHolder] = message.useMessage();
   const { token, user, switchServer } = useAuthStore();
+  
+  const { checkUpdate, updateInfo, cancelUpdate } = useCheckUpdate();
 
   useEffect(() => {
     const savedAddress = localStorage.getItem("serverAddress") || "http://localhost:3000";
     switchServer(savedAddress);
+    
+    // Check update on startup
+    const timer = setTimeout(() => {
+      checkUpdate();
+    }, 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -176,6 +186,7 @@ const AppContent = () => {
           <Player />
         </div>
         <LoginModal />
+        <UpdateModal visible={!!updateInfo} updateInfo={updateInfo} onCancel={cancelUpdate} />
         <InviteListener />
       </MessageProvider>
     </ConfigProvider>
