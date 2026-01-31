@@ -61,16 +61,26 @@ export default function LoginFormScreen() {
       const savedConfig = await AsyncStorage.getItem(configKey);
       
       if (savedConfig) {
-        const { internal, external } = JSON.parse(savedConfig);
-        setInternalAddress(internal || "");
-        setExternalAddress(external || "");
+        const parsed = JSON.parse(savedConfig);
+        // Handle array format
+        if (Array.isArray(parsed) && parsed.length > 0) {
+           // For now, in login form, just default to empty or the last one? 
+           // Actually, the user is typing a NEW one here usually, or we could autofill the last used.
+           // Let's autofill the last added one for convenience
+           const lastConfig = parsed[parsed.length - 1];
+           setInternalAddress(lastConfig.internal || "");
+           setExternalAddress(lastConfig.external || "");
 
-        // Try to restore credentials based on the last used address (or either)
-        // We'll just pick external or internal to look up creds, usually they are same for the "Server Entity"
-        // But our creds storage is by specific address.
-        // Let's try to find creds for external first, then internal.
-        if (external) await restoreCredentials(external, type);
-        else if (internal) await restoreCredentials(internal, type);
+           if (lastConfig.external) await restoreCredentials(lastConfig.external, type);
+           else if (lastConfig.internal) await restoreCredentials(lastConfig.internal, type);
+        } else if (!Array.isArray(parsed)) {
+             // Handle legacy object format
+            const { internal, external } = parsed;
+            setInternalAddress(internal || "");
+            setExternalAddress(external || "");
+             if (external) await restoreCredentials(external, type);
+             else if (internal) await restoreCredentials(internal, type);
+        }
       } else {
         // Defaults
         if (type === "AudioDock") {
@@ -125,12 +135,44 @@ export default function LoginFormScreen() {
 
       console.log(`Selected Best Address: ${bestAddress}`);
 
-      // 2. Save Config (Both addresses)
+      // 2. Save Config (Add new entry to array)
       const configKey = `sourceConfig_${sourceType}`;
-      await AsyncStorage.setItem(configKey, JSON.stringify({
-        internal: internalAddress,
-        external: externalAddress
-      }));
+      const existingStr = await AsyncStorage.getItem(configKey);
+      let existingConfigs: Array<{ id: string; internal: string; external: string; name: string }> = [];
+      
+      try {
+        if (existingStr) {
+            const parsed = JSON.parse(existingStr);
+            if(Array.isArray(parsed)) existingConfigs = parsed;
+            else existingConfigs = [{
+                id: Date.now().toString(),
+                internal: parsed.internal || "",
+                external: parsed.external || "",
+                name: "默认服务器"
+            }];
+        }
+      } catch(e) { existingConfigs = [] }
+
+      // Check if this specific pair already exists to update it, or add new
+      // We identify by exact match of addresses? Or should we always add new?
+      // User request implies adding new ones. But we should avoid duplicates.
+      const existingIndex = existingConfigs.findIndex(
+          c => c.internal === internalAddress && c.external === externalAddress
+      );
+
+      if (existingIndex > -1) {
+          // Update existing (maybe name?) - For now just keep as is
+      } else {
+          // Add new
+          existingConfigs.push({
+              id: Date.now().toString(),
+              internal: internalAddress,
+              external: externalAddress,
+              name: `服务器 ${existingConfigs.length + 1}`
+          });
+      }
+
+      await AsyncStorage.setItem(configKey, JSON.stringify(existingConfigs));
 
       // 3. Save Credentials (linked to the specific valid address we found, 
       // but maybe we should save for BOTH? For now, standard flow saves for the active one)

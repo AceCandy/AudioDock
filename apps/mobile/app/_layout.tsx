@@ -41,7 +41,8 @@ function RootLayoutNav() {
       segmentName === "admin" ||
       segmentName === "notification.click" ||
       segmentName === "source-manage" ||
-      segmentName === "login-form";
+      segmentName === "login-form" ||
+      segmentName === "login";
 
     if (!token && inAuthGroup) {
       router.replace({

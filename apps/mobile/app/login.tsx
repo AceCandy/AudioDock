@@ -1,6 +1,6 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import { SOURCEMAP, SOURCETIPSMAP } from "@soundx/services";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -21,6 +21,7 @@ export default function LoginSelectionScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
 
   const getLogo = (key: string) => {
     switch (key) {
@@ -32,8 +33,8 @@ export default function LoginSelectionScreen() {
 
   const handleSelect = (type: string) => {
     router.push({
-      pathname: "/login-form" as any,
-      params: { type },
+      pathname: "/login-form",
+      params: { type, adding: params.adding },
     });
   };
 

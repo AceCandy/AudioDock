@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SOURCEMAP, SOURCETIPSMAP } from "@soundx/services";
+import * as Network from 'expo-network';
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -32,32 +33,57 @@ export default function SourceManageScreen() {
   const { switchServer } = useAuth();
 
   const [configs, setConfigs] = useState<
-    Record<string, { internal: string; external: string }>
+    Record<
+      string,
+      Array<{ id: string; internal: string; external: string; name?: string }>
+    >
   >({});
-  const [loadingType, setLoadingType] = useState<string | null>(null);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [networkType, setNetworkType] = useState<Network.NetworkStateType>(Network.NetworkStateType.UNKNOWN);
 
   useEffect(() => {
     loadAllConfigs();
+    checkNetwork();
   }, []);
 
+  const checkNetwork = async () => {
+      const state = await Network.getNetworkStateAsync();
+      if (state.type) {
+        setNetworkType(state.type);
+      }
+  };
+
   const loadAllConfigs = async () => {
-    const newConfigs: Record<string, { internal: string; external: string }> =
-      {};
+    const newConfigs: Record<
+      string,
+      Array<{ id: string; internal: string; external: string; name?: string }>
+    > = {};
     for (const key of Object.keys(SOURCEMAP)) {
       try {
         const configKey = `sourceConfig_${key}`;
         const saved = await AsyncStorage.getItem(configKey);
         if (saved) {
-          newConfigs[key] = JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            newConfigs[key] = parsed;
+          } else {
+            // Migration: Convert old object format to array
+            newConfigs[key] = [
+              {
+                id: Date.now().toString(),
+                internal: parsed.internal || "",
+                external: parsed.external || "",
+                name: "默认服务器",
+              },
+            ];
+          }
         } else {
-          newConfigs[key] = {
-            internal: key === "AudioDock" ? "http://localhost:3000" : "",
-            external: "",
-          };
+          // No saved config, empty array
+          newConfigs[key] = [];
         }
       } catch (e) {
-        newConfigs[key] = { internal: "", external: "" };
+        newConfigs[key] = [];
       }
     }
     setConfigs(newConfigs);
@@ -65,16 +91,37 @@ export default function SourceManageScreen() {
 
   const updateConfig = (
     key: string,
-    field: "internal" | "external",
+    id: string,
+    field: "internal" | "external" | "name",
     value: string,
   ) => {
     setConfigs((prev) => ({
       ...prev,
-      [key]: {
-        ...prev[key],
-        [field]: value,
-      },
+      [key]: prev[key].map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
     }));
+  };
+
+  const deleteConfig = async (key: string, id: string) => {
+    Alert.alert("删除数据源", "确定要删除这个数据源配置吗？", [
+      { text: "取消", style: "cancel" },
+      {
+        text: "删除",
+        style: "destructive",
+        onPress: async () => {
+          const newKeyConfigs = configs[key].filter((item) => item.id !== id);
+          setConfigs((prev) => ({
+            ...prev,
+            [key]: newKeyConfigs,
+          }));
+          await AsyncStorage.setItem(
+            `sourceConfig_${key}`,
+            JSON.stringify(newKeyConfigs),
+          );
+        },
+      },
+    ]);
   };
 
   const saveConfig = async (key: string) => {
@@ -82,16 +129,18 @@ export default function SourceManageScreen() {
     await AsyncStorage.setItem(`sourceConfig_${key}`, JSON.stringify(config));
   };
 
-  const handleConnect = async (key: string) => {
-    const config = configs[key];
-    if (!config.internal && !config.external) {
+  const handleConnect = async (key: string, id: string) => {
+    const configList = configs[key];
+    const config = configList.find((c) => c.id === id);
+
+    if (!config || (!config.internal && !config.external)) {
       Alert.alert("提示", "请至少输入一个地址");
       return;
     }
 
     try {
-      setLoadingType(key);
-      await saveConfig(key); // Save first
+      setLoadingId(id);
+      await saveConfig(key); // Save all configs for this key
 
       const bestAddress = await selectBestServer(
         config.internal,
@@ -100,7 +149,7 @@ export default function SourceManageScreen() {
       );
 
       if (!bestAddress) {
-        setExpanded((prev) => ({ ...prev, [key]: true }));
+        setExpanded((prev) => ({ ...prev, [id]: true }));
         Alert.alert(
           "连接失败",
           "无法连接到该数据源的任一地址，请检查网络或配置",
@@ -116,10 +165,10 @@ export default function SourceManageScreen() {
       router.back();
     } catch (error: any) {
       console.error(error);
-      setExpanded((prev) => ({ ...prev, [key]: true }));
+      setExpanded((prev) => ({ ...prev, [id]: true }));
       Alert.alert("错误", error.message || "切换失败");
     } finally {
-      setLoadingType(null);
+      setLoadingId(null);
     }
   };
 
@@ -150,138 +199,230 @@ export default function SourceManageScreen() {
             Wi-Fi 环境下优先选择内网，移动网络环境下只选择外网
           </Text>
           {Object.keys(SOURCEMAP).map((key) => {
-            const config = configs[key] || { internal: "", external: "" };
-            const isLoading = loadingType === key;
-            const isDisabled = key === "Emby";
+            // Only show those that have at least one config saved
+            const configList = configs[key] || [];
+            if (configList.length === 0) return null;
 
-            const getLogo = (key: string) => {
-              switch (key) {
-                case "Emby":
-                  return embyLogo;
-                case "Subsonic":
-                  return subsonicLogo;
-                default:
-                  return logo;
+            return configList.map((config) => {
+              const uniqueId = config.id;
+              const isLoading = loadingId === uniqueId;
+              const isDisabled = key === "Emby"; // Global disable for Emby if needed
+
+              const getLogo = (k: string) => {
+                switch (k) {
+                  case "Emby":
+                    return embyLogo;
+                  case "Subsonic":
+                    return subsonicLogo;
+                  default:
+                    return logo;
+                }
+              };
+
+              const hasValue = !!(config.internal || config.external);
+              const isExpanded = expanded[uniqueId] ?? !hasValue;
+
+              const isWifi = networkType === Network.NetworkStateType.WIFI;
+              let connectButtonText = "自动连接";
+              let networkConnectDisabled = false;
+
+              if (config.internal && config.external) {
+                  connectButtonText = "自动连接";
+              } else if (config.internal) {
+                  connectButtonText = "内网连接";
+              } else if (config.external) {
+                  connectButtonText = "外网连接";
               }
-            };
 
-            const hasValue = !!(config.internal || config.external);
-            const isExpanded = expanded[key] ?? !hasValue; // Default to expanded if no value, collapsed if has value
+              if (!isWifi) {
+                  // Cellular or other
+                  if (!config.external) {
+                      connectButtonText = "无法连接 (缺外网)";
+                      networkConnectDisabled = true;
+                  } else {
+                      connectButtonText = "外网连接";
+                  }
+              }
 
-            const toggleExpand = () => {
-              setExpanded((prev) => ({
-                ...prev,
-                [key]: !isExpanded,
-              }));
-            };
+              const toggleExpand = () => {
+                setExpanded((prev) => ({
+                  ...prev,
+                  [uniqueId]: !isExpanded,
+                }));
+              };
 
-            return (
-              <View
-                key={key}
-                style={[
-                  styles.card,
-                  { backgroundColor: colors.card, borderColor: colors.border },
-                  isDisabled && { opacity: 0.5 },
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.cardHeader}
-                  onPress={hasValue ? toggleExpand : undefined}
-                  activeOpacity={hasValue ? 0.7 : 1}
-                >
-                  <Image source={getLogo(key)} style={styles.cardLogo} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.cardTitle, { color: colors.text }]}>
-                      {key}
-                    </Text>
-                    <Text
-                      style={[styles.cardSubtitle, { color: colors.secondary }]}
-                    >
-                      {SOURCETIPSMAP[key as keyof typeof SOURCETIPSMAP]}
-                    </Text>
-                  </View>
-                  {hasValue && (
-                    <Ionicons
-                      name={isExpanded ? "chevron-up" : "chevron-down"}
-                      size={24}
-                      color={colors.secondary}
-                    />
-                  )}
-                </TouchableOpacity>
-
-                {isExpanded && (
-                  <>
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.label, { color: colors.secondary }]}>
-                        内网地址
-                      </Text>
-                      <TextInput
-                        style={[
-                          styles.input,
-                          {
-                            color: colors.text,
-                            borderColor: colors.border,
-                            backgroundColor: colors.background,
-                          },
-                        ]}
-                        value={config.internal}
-                        onChangeText={(val) =>
-                          updateConfig(key, "internal", val)
-                        }
-                        autoCapitalize="none"
-                        placeholder="http://192.168.x.x:port"
-                        placeholderTextColor={colors.secondary}
-                        editable={!isDisabled}
-                      />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                      <Text style={[styles.label, { color: colors.secondary }]}>
-                        外网地址
-                      </Text>
-                      <TextInput
-                        style={[
-                          styles.input,
-                          {
-                            color: colors.text,
-                            borderColor: colors.border,
-                            backgroundColor: colors.background,
-                          },
-                        ]}
-                        value={config.external}
-                        onChangeText={(val) =>
-                          updateConfig(key, "external", val)
-                        }
-                        autoCapitalize="none"
-                        placeholder="https://example.com"
-                        placeholderTextColor={colors.secondary}
-                        editable={!isDisabled}
-                      />
-                    </View>
-                  </>
-                )}
-
-                <TouchableOpacity
+              return (
+                <View
+                  key={uniqueId}
                   style={[
-                    styles.connectButton,
-                    { backgroundColor: colors.primary },
+                    styles.card,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                    isDisabled && { opacity: 0.5 },
                   ]}
-                  onPress={() => handleConnect(key)}
-                  disabled={isDisabled || isLoading}
                 >
-                  {isLoading ? (
-                    <ActivityIndicator color={colors.background} />
-                  ) : (
-                    <Text
-                      style={[styles.buttonText, { color: colors.background }]}
+                  <View style={styles.cardHeaderRow}>
+                    <TouchableOpacity
+                      style={styles.cardHeaderClickable}
+                      onPress={hasValue ? toggleExpand : undefined}
+                      activeOpacity={hasValue ? 0.7 : 1}
                     >
-                      {isExpanded ? "连接并切换" : "直接连接"}
-                    </Text>
+                      <Image source={getLogo(key)} style={styles.cardLogo} />
+                      <View style={{ flex: 1 }}>
+                        <Text
+                          style={[styles.cardTitle, { color: colors.text }]}
+                        >
+                          {key}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.cardSubtitle,
+                            { color: colors.secondary },
+                          ]}
+                        >
+                          {SOURCETIPSMAP[key as keyof typeof SOURCETIPSMAP]}
+                        </Text>
+                      </View>
+                      {hasValue && (
+                        <Ionicons
+                          name={isExpanded ? "chevron-up" : "chevron-down"}
+                          size={24}
+                          color={colors.secondary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {isExpanded && (
+                    <>
+                      {/* Can add name editing here if needed */}
+                      <View style={styles.inputGroup}>
+                        <Text
+                          style={[styles.label, { color: colors.secondary }]}
+                        >
+                          内网地址
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.input,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          value={config.internal}
+                          onChangeText={(val) =>
+                            updateConfig(key, uniqueId, "internal", val)
+                          }
+                          autoCapitalize="none"
+                          placeholder="http://192.168.x.x:port"
+                          placeholderTextColor={colors.secondary}
+                          editable={!isDisabled}
+                        />
+                      </View>
+
+                      <View style={styles.inputGroup}>
+                        <Text
+                          style={[styles.label, { color: colors.secondary }]}
+                        >
+                          外网地址
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.input,
+                            {
+                              color: colors.text,
+                              borderColor: colors.border,
+                              backgroundColor: colors.background,
+                            },
+                          ]}
+                          value={config.external}
+                          onChangeText={(val) =>
+                            updateConfig(key, uniqueId, "external", val)
+                          }
+                          autoCapitalize="none"
+                          placeholder="https://example.com"
+                          placeholderTextColor={colors.secondary}
+                          editable={!isDisabled}
+                        />
+                      </View>
+                    </>
                   )}
-                </TouchableOpacity>
-              </View>
-            );
+
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginTop: 0,
+                      gap: 0,
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        styles.connectButton,
+                        { padding: 5, width: 40, backgroundColor: "red" },
+                      ]}
+                      onPress={() => deleteConfig(key, uniqueId)}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#fff" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.connectButton,
+                        {
+                          backgroundColor: networkConnectDisabled ? colors.border : colors.primary,
+                          flex: 1,
+                          marginHorizontal: 10,
+                          marginTop: 0,
+                        },
+                      ]}
+                      onPress={() => handleConnect(key, uniqueId)}
+                      disabled={isDisabled || isLoading || networkConnectDisabled}
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator color={colors.background} />
+                      ) : (
+                        <Text
+                          style={[
+                            styles.buttonText,
+                            { color: networkConnectDisabled ? colors.text : colors.background },
+                          ]}
+                        >
+                          {connectButtonText}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            });
           })}
+
+          <TouchableOpacity
+            style={[
+              styles.addButton,
+              { borderColor: colors.border, backgroundColor: colors.card },
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: "/login",
+                params: { adding: "true" },
+              } as any)
+            }
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={24}
+              color={colors.primary}
+            />
+            <Text style={[styles.addButtonText, { color: colors.primary }]}>
+              添加数据源
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -318,6 +459,14 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     marginBottom: 15,
+  },
+  cardHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  cardHeaderClickable: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -354,10 +503,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
   },
   buttonText: {
     fontWeight: "bold",
     fontSize: 16,
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    gap: 8,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
