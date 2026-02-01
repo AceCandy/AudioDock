@@ -367,7 +367,7 @@ export default function SourceManageScreen() {
                       ]}
                       onPress={() => deleteConfig(key, uniqueId)}
                     >
-                      <Ionicons name="trash-outline" size={20} color="#fff" />
+                      <Ionicons name="trash-outline" size={18} color="#fff" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -416,7 +416,7 @@ export default function SourceManageScreen() {
           >
             <Ionicons
               name="add-circle-outline"
-              size={24}
+              size={18}
               color={colors.primary}
             />
             <Text style={[styles.addButtonText, { color: colors.primary }]}>
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
   backButton: {
@@ -449,8 +449,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 15,
-    paddingBottom: 40,
-    gap: 20,
+    gap: 15,
   },
   card: {
     padding: 15,
@@ -477,7 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
     marginBottom: 5,
   },
@@ -499,20 +498,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   connectButton: {
-    height: 40,
+    height: 35,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
   buttonText: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 12,
   },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    padding: 15,
+    padding: 10,
     borderRadius: 12,
     borderWidth: 1,
     borderStyle: "dashed",

@@ -227,8 +227,8 @@ export default function LoginFormScreen() {
                }} 
                style={styles.backButton}
              >
-                <Text style={{color: colors.text, fontSize: 16, marginLeft: 5}}>切换类型</Text>
-                <MaterialIcons name="grid-view" size={18} color={colors.text} />
+                <Text style={{color: colors.text, fontSize: 12, marginLeft: 5}}>切换类型</Text>
+                <MaterialIcons name="grid-view" size={12} color={colors.text} />
              </TouchableOpacity>
           </View>
 
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
   },

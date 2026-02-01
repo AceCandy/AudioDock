@@ -99,18 +99,18 @@ const styles = StyleSheet.create({
     marginVertical: 40,
   },
   appLogo: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 16,
     marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 12,
     textAlign: 'center',
   },
   list: {
