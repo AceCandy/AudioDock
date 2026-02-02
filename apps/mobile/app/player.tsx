@@ -748,6 +748,8 @@ export default function PlayerScreen() {
                 <ScrollView
                   ref={scrollViewRef}
                   style={styles.lyricsScroll}
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}
                   contentContainerStyle={[
                     styles.lyricsScrollContent,
                     {
@@ -840,6 +842,8 @@ export default function PlayerScreen() {
                   <ScrollView
                     ref={scrollViewRef}
                     style={styles.lyricsScroll}
+                    showsVerticalScrollIndicator={false}
+                    showsHorizontalScrollIndicator={false}
                     contentContainerStyle={[
                       styles.lyricsScrollContent,
                       {

@@ -537,11 +537,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsRadioMode(false);
     }
     try {
-      // If NOT in radio mode and manually playing a track, make sure radio mode is OFF
-      // This allows the "manual play" to break the radio loop
-      // But we should NOT turn it off if playTrack is called INTERNALLY by playNext (radio)
-      // Actually, it's easier to explicitly set it to false when the user clicks something.
-      // I'll keep it as is and define startRadioMode to set it to true.
+      // ✨ 幂等性检查：如果已经是当前歌曲，且没有大幅度进度偏差，则不重置播放器
+      if (currentTrackRef.current?.id === track.id) {
+        console.log("[Player] Already playing this track, skipping reset.");
+        if (initialPosition !== undefined) {
+          await TrackPlayer.seekTo(initialPosition);
+        }
+        return;
+      }
 
       // ✨ 重置片尾跳过锁
       isSkippingOutroRef.current = false;
@@ -748,7 +751,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         data: any;
         fromUserId: number;
       }) => {
-        if (payload.fromUserId === user?.id) return;
+        if (String(payload.fromUserId) === String(user?.id)) return;
         isProcessingSync.current = true;
         switch (payload.type) {
           case "play":
@@ -761,7 +764,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
             seekTo(payload.data);
             break;
           case "track_change":
-            playTrack(payload.data);
+            if (currentTrackRef.current?.id !== payload.data.id) {
+              playTrack(payload.data);
+            }
             break;
           case "playlist":
             setTrackList(payload.data);
@@ -809,8 +814,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [isSynced, sessionId, currentTrack, isPlaying, position]);
 
   useEffect(() => {
-    if (isSynced && lastAcceptedInvite && !currentTrack) {
+    if (isSynced && lastAcceptedInvite) {
       console.log("Applying invite context: playlist and track");
+      isProcessingSync.current = true;
       if (lastAcceptedInvite.playlist) {
         setTrackList(lastAcceptedInvite.playlist);
       }
@@ -822,8 +828,22 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           );
         }
       }
+      // Allow states to settle before enabling broadcast
+      setTimeout(() => {
+        isProcessingSync.current = false;
+      }, 1000);
     }
-  }, [isSynced, lastAcceptedInvite, isSetup]);
+  }, [isSynced, lastAcceptedInvite?.sessionId, isSetup]);
+
+  // ✨ 优化：当同步 Session 正式启动时（有人加入），发起者自动恢复播放
+  const prevIsSyncedRef = useRef(false);
+  useEffect(() => {
+    if (isSynced && !prevIsSyncedRef.current && !lastAcceptedInvite) {
+      console.log("[Sync] Session active, initiator resuming playback.");
+      resume();
+    }
+    prevIsSyncedRef.current = isSynced;
+  }, [isSynced, lastAcceptedInvite]);
 
   useEffect(() => {
     const handleSessionEnded = () => {

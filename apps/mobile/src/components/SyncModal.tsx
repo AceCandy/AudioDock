@@ -2,14 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { getUserList } from '@soundx/services';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Dimensions,
-    FlatList,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
@@ -28,7 +28,7 @@ const SyncModal: React.FC<SyncModalProps> = ({ visible, onClose }) => {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const { user: currentUser } = useAuth();
-  const { currentTrack, position, trackList } = usePlayer();
+  const { currentTrack, position, trackList, pause } = usePlayer();
   const { isSynced, sessionId } = useSync();
   const { colors } = useTheme();
 
@@ -62,9 +62,12 @@ const SyncModal: React.FC<SyncModalProps> = ({ visible, onClose }) => {
     setSelectedUserIds(newSelected);
   };
 
-  const handleInvite = () => {
+  const handleInvite = async () => {
     if (selectedUserIds.size === 0) return;
     
+    // 发起邀请时先暂停，等待对方加入
+    await pause();
+
     socketService.emit('invite', {
       targetUserIds: Array.from(selectedUserIds),
       currentTrack,
@@ -80,7 +83,7 @@ const SyncModal: React.FC<SyncModalProps> = ({ visible, onClose }) => {
   const renderItem = ({ item }: { item: User }) => (
     <TouchableOpacity 
       style={[styles.userItem, { borderBottomColor: colors.border }]} 
-      onPress={() => toggleUser(item.id)}
+      onPress={() => toggleUser(item.id as number)}
     >
       <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
         <Text style={[styles.avatarText, { color: colors.background }]}>{item.username[0].toUpperCase()}</Text>
@@ -89,9 +92,9 @@ const SyncModal: React.FC<SyncModalProps> = ({ visible, onClose }) => {
       <View style={[
         styles.checkbox, 
         { borderColor: colors.border },
-        selectedUserIds.has(item.id) && { backgroundColor: colors.primary, borderColor: colors.primary }
+        selectedUserIds.has(item.id as number) && { backgroundColor: colors.primary, borderColor: colors.primary }
       ]}>
-        {selectedUserIds.has(item.id) && <Ionicons name="checkmark" size={16} color={colors.background} />}
+        {selectedUserIds.has(item.id as number) && <Ionicons name="checkmark" size={16} color={colors.background} />}
       </View>
     </TouchableOpacity>
   );
