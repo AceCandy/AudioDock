@@ -56,10 +56,12 @@ async function bootstrap() {
 
   if (count === 0) {
     console.log('Database is empty, starting initial import...');
-    const myService = app.get(ImportService); // 替换成你要调用的 service
-    await myService.createTask(musicBaseDir, audioBookDir, cacheDir); // 调用 service 方法
+    const myService = app.get(ImportService);
+    await myService.createTask(musicBaseDir, audioBookDir, cacheDir);
   } else {
-    console.log(`Database has ${count} tracks, skipping initial import.`);
+    console.log(`Database has ${count} tracks, skipping initial import. Starting watcher...`);
+    const myService = app.get(ImportService);
+    myService.setupWatcher(musicBaseDir, audioBookDir, cacheDir);
   }
 
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');

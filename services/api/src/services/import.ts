@@ -176,7 +176,8 @@ export class ImportService implements OnModuleInit {
     }
   }
 
-  private setupWatcher(musicPath: string, audiobookPath: string, cachePath: string) {
+  @LogMethod()
+  setupWatcher(musicPath: string, audiobookPath: string, cachePath: string) {
     if (this.watcher) {
       this.watcher.close();
     }
@@ -187,10 +188,13 @@ export class ImportService implements OnModuleInit {
     this.watcher = chokidar.watch(paths, {
       persistent: true,
       usePolling: true,
+      interval: 1000,
+      binaryInterval: 3000,
       ignoreInitial: true,
+      alwaysStat: true,
       awaitWriteFinish: {
         stabilityThreshold: 2000,
-        pollInterval: 100
+        pollInterval: 500
       }
     });
 
